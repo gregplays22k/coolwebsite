@@ -12,11 +12,25 @@
     display: block;
     image-rendering: pixelated;
   }
+  #gameButtons {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+  button {
+    padding: 10px 15px;
+    margin-right: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
 </style>
 </head>
-<button id="flapybirdbutton" onclick="location.href='flapybird.html'">flapy game</button>
-<button id="snakegameButton" onclick="location.href='index.html'">snake game</button>
 <body>
+<div id="gameButtons">
+  <button id="flappyBirdButton" onclick="location.href='flappybird.html'">Flappy Game</button>
+  <button id="snakeGameButton" onclick="location.href='snake.html'">Snake Game</button>
+</div>
 <canvas id="gameCanvas"></canvas>
 <canvas id="skinCanvas" style="display: none;"></canvas>
 <script>
@@ -38,6 +52,7 @@
     velocityX: 0,
     jumping: false,
     skin: createDefaultSkin(),
+    alive: true,
   };
 
   function createDefaultSkin() {
@@ -52,21 +67,20 @@
     ctx.drawImage(player.skin, player.x, player.y, player.width, player.height);
   }
 
-  // Example: Change skin on key press (for testing)
   document.addEventListener("keydown", (e) => {
     if (e.key === "s") {
-      player.skin = createRandomSkin(); //create new random skin.
+      player.skin = createRandomSkin();
     }
   });
 
   function createRandomSkin() {
     skinCanvas.width = 16;
     skinCanvas.height = 32;
-    for(let y=0; y<32; y++){
-      for(let x=0; x<16; x++){
-        if(Math.random() < 0.3){
-          skinCtx.fillStyle = `rgb(${Math.random()*255},${Math.random()*255},${Math.random()*255})`;
-          skinCtx.fillRect(x,y,1,1);
+    for (let y = 0; y < 32; y++) {
+      for (let x = 0; x < 16; x++) {
+        if (Math.random() < 0.3) {
+          skinCtx.fillStyle = `rgb(<span class="math-inline">\{Math\.random\(\) \* 255\},</span>{Math.random() * 255},${Math.random() * 255})`;
+          skinCtx.fillRect(x, y, 1, 1);
         }
       }
     }
@@ -74,6 +88,8 @@
   }
 
   let platforms = [];
+  let spikes = [];
+  let enemies = [];
   const platformWidth = 100 * scale;
   const platformHeight = 20 * scale;
   let worldOffset = 0;
@@ -94,6 +110,12 @@
         height: platformHeight,
         color: `rgb(${Math.random() * 150 + 50}, ${Math.random() * 150 + 50}, ${Math.random() * 150 + 50})`,
       });
+      if(Math.random() < 0.1){
+        spikes.push({x: newX + Math.random()*platformWidth, y: newY-10*scale, width: 10*scale, height: 10*scale})
+      }
+      if(Math.random() < 0.05){
+        enemies.push({x: newX + Math.random()*platformWidth, y: newY - 20*scale, width: 20*scale, height: 20*scale, velocityX: Math.random()*2-1, color: "purple"})
+      }
     }
   }
 
@@ -112,6 +134,7 @@
   });
 
   function update() {
+    if(!player.alive) return;
     if (keys["ArrowLeft"]) {
       player.velocityX = -moveSpeed;
     } else if (keys["ArrowRight"]) {
@@ -149,6 +172,26 @@
         }
       }
     });
+
+    spikes.forEach((spike)=>{
+        if (player.x < spike.x + spike.width - worldOffset &&
+        player.x + player.width > spike.x - worldOffset &&
+        player.y + player.height > spike.y &&
+        player.y < spike.y + spike.height){
+            player.alive = false;
+        }
+    })
+
+    enemies.forEach((enemy)=>{
+        enemy.x += enemy.velocityX;
+        if (player.x < enemy.x + enemy.width - worldOffset &&
+        player.x + player.width > enemy.x - worldOffset &&
+        player.y + player.height > enemy.y &&
+        player.y < enemy.y + enemy.height){
+            player.alive = false;
+        }
+    })
+
     if (!grounded && player.y + player.height > canvas.height) {
       player.y = canvas.height - player.height;
       player.velocityY = 0;
@@ -170,16 +213,7 @@
       ctx.fillStyle = platform.color;
       ctx.fillRect(platform.x - worldOffset, platform.y, platform.width, platform.height);
     });
-    drawPlayerSkin();
-  }
 
-  function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-  }
-
-  gameLoop();
-</script>
-</body>
-</html>
+    spikes.forEach((spike)=>{
+        ctx.fillStyle = "black";
+        ctx.fillRect(spike.x - world
