@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Infinite Pixel Platformer</title>
+<title>Hard Platformer</title>
 <style>
   body {
     margin: 0;
@@ -40,7 +40,7 @@
   const skinCtx = skinCanvas.getContext("2d");
 
   const scale = 3;
-  canvas.width = 800;
+  canvas.width = 1600; // Increased width for the level
   canvas.height = 600;
 
   const player = {
@@ -53,6 +53,7 @@
     jumping: false,
     skin: createDefaultSkin(),
     alive: true,
+    won: false,
   };
 
   function createDefaultSkin() {
@@ -87,37 +88,28 @@
     return skinCanvas;
   }
 
-  let platforms = [];
-  let spikes = [];
-  let enemies = [];
-  const platformWidth = 100 * scale;
-  const platformHeight = 20 * scale;
-  let worldOffset = 0;
+  let platforms = [
+    { x: 0, y: 550, width: 300, height: 50 * scale, color: "green" },
+    { x: 400, y: 450, width: 200, height: 20 * scale, color: "brown" },
+    { x: 700, y: 350, width: 200, height: 20 * scale, color: "brown" },
+    { x: 1000, y: 450, width: 200, height: 20 * scale, color: "brown" },
+    { x: 1300, y: 350, width: 200, height: 20 * scale, color: "brown" },
+    { x: 1550, y: 550, width: 50, height: 50 * scale, color: "gold" }, // End platform
+  ];
 
-  function generatePlatforms() {
-    if (platforms.length === 0) {
-      platforms.push({ x: 0, y: 550, width: canvas.width * 2, height: 50 * scale, color: "green" });
-    }
+  let spikes = [
+    { x: 450, y: 450 - 10 * scale, width: 10 * scale, height: 10 * scale },
+    { x: 750, y: 350 - 10 * scale, width: 10 * scale, height: 10 * scale },
+    { x: 1050, y: 450 - 10 * scale, width: 10 * scale, height: 10 * scale },
+    { x: 1350, y: 350 - 10 * scale, width: 10 * scale, height: 10 * scale },
+  ];
 
-    while (platforms[platforms.length - 1].x + platforms[platforms.length - 1].width < canvas.width + worldOffset) {
-      const lastPlatform = platforms[platforms.length - 1];
-      const newX = lastPlatform.x + lastPlatform.width + Math.random() * 200 * scale;
-      const newY = Math.random() * (canvas.height - 200) + 100;
-      platforms.push({
-        x: newX,
-        y: newY,
-        width: platformWidth,
-        height: platformHeight,
-        color: `rgb(${Math.random() * 150 + 50}, ${Math.random() * 150 + 50}, ${Math.random() * 150 + 50})`,
-      });
-      if(Math.random() < 0.1){
-        spikes.push({x: newX + Math.random()*platformWidth, y: newY-10*scale, width: 10*scale, height: 10*scale})
-      }
-      if(Math.random() < 0.05){
-        enemies.push({x: newX + Math.random()*platformWidth, y: newY - 20*scale, width: 20*scale, height: 20*scale, velocityX: Math.random()*2-1, color: "purple"})
-      }
-    }
-  }
+  let enemies = [
+    { x: 500, y: 450 - 20 * scale, width: 20 * scale, height: 20 * scale, velocityX: 1, color: "purple" },
+    { x: 800, y: 350 - 20 * scale, width: 20 * scale, height: 20 * scale, velocityX: -1, color: "purple" },
+    { x: 1100, y: 450 - 20 * scale, width: 20 * scale, height: 20 * scale, velocityX: 1, color: "purple" },
+    { x: 1400, y: 350 - 20 * scale, width: 20 * scale, height: 20 * scale, velocityX: -1, color: "purple" },
+  ];
 
   const gravity = 0.8;
   const jumpStrength = -15;
@@ -134,7 +126,7 @@
   });
 
   function update() {
-    if(!player.alive) return;
+    if (!player.alive) return;
     if (keys["ArrowLeft"]) {
       player.velocityX = -moveSpeed;
     } else if (keys["ArrowRight"]) {
@@ -151,13 +143,12 @@
     player.velocityY += gravity;
     player.y += player.velocityY;
     player.x += player.velocityX;
-    worldOffset += -player.velocityX;
 
     let grounded = false;
     platforms.forEach((platform) => {
       if (
-        player.x < platform.x + platform.width - worldOffset &&
-        player.x + player.width > platform.x - worldOffset &&
+        player.x < platform.x + platform.width &&
+        player.x + player.width > platform.x &&
         player.y + player.height > platform.y &&
         player.y < platform.y + platform.height
       ) {
@@ -173,47 +164,30 @@
       }
     });
 
-    spikes.forEach((spike)=>{
-        if (player.x < spike.x + spike.width - worldOffset &&
-        player.x + player.width > spike.x - worldOffset &&
+    spikes.forEach((spike) => {
+      if (
+        player.x < spike.x + spike.width &&
+        player.x + player.width > spike.x &&
         player.y + player.height > spike.y &&
-        player.y < spike.y + spike.height){
-            player.alive = false;
-        }
-    })
-
-    enemies.forEach((enemy)=>{
-        enemy.x += enemy.velocityX;
-        if (player.x < enemy.x + enemy.width - worldOffset &&
-        player.x + player.width > enemy.x - worldOffset &&
-        player.y + player.height > enemy.y &&
-        player.y < enemy.y + enemy.height){
-            player.alive = false;
-        }
-    })
-
-    if (!grounded && player.y + player.height > canvas.height) {
-      player.y = canvas.height - player.height;
-      player.velocityY = 0;
-      player.jumping = false;
-    }
-
-    if (player.x < 0) player.x = 0;
-    if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-    if (player.y > canvas.height) {
-      player.y = canvas.height - player.height;
-    }
-    generatePlatforms();
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    platforms.forEach((platform) => {
-      ctx.fillStyle = platform.color;
-      ctx.fillRect(platform.x - worldOffset, platform.y, platform.width, platform.height);
+        player.y < spike.y + spike.height
+      ) {
+        player.alive = false;
+      }
     });
 
-    spikes.forEach((spike)=>{
-        ctx.fillStyle = "black";
-        ctx.fillRect(spike.x - world
+    enemies.forEach((enemy) => {
+      enemy.x += enemy.velocityX;
+      if (enemy.x < platforms[0].x || enemy.x + enemy.width > platforms[platforms.length-2].x + platforms[platforms.length-2].width) {
+          enemy.velocityX = -enemy.velocityX;
+      }
+      if (
+        player.x < enemy.x + enemy.width &&
+        player.x + player.width > enemy.x &&
+        player.y + player.height > enemy.y &&
+        player.y < enemy.y + enemy.height
+      ) {
+        player.alive = false;
+      }
+    });
+
+    if (!grounded && player.y + player.height > canvas.height
