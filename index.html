@@ -15,9 +15,31 @@
             border: 1px solid #ccc;
             background-color: #fff;
         }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
+    <div id="controls">
+        <label for="snakeColor">Snake Color:</label>
+        <input type="color" id="snakeColor" value="#606468"><br>
+        <label for="foodColor">Food Color:</label>
+        <input type="color" id="foodColor" value="#d32f2f"><br>
+        <label for="snakeImage">Upload Snake Image:</label>
+        <input type="file" id="snakeImage" accept="image/*"><br>
+        <label for="gameMode">Game Mode:</label>
+        <select id="gameMode">
+            <option value="classic">Classic</option>
+            <option value="walls">Walls</option>
+            <option value="speedy">Speedy</option>
+        </select>
+    </div>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
 
     <script>
@@ -34,15 +56,50 @@
         let score = 0;
         let gameRunning = true;
 
+        let snakeColor = "#606468";
+        let foodColor = "#d32f2f";
+        let snakeImage = null;
+        let gameMode = "classic";
+
+        document.getElementById("snakeColor").addEventListener("change", (event) => {
+            snakeColor = event.target.value;
+        });
+
+        document.getElementById("foodColor").addEventListener("change", (event) => {
+            foodColor = event.target.value;
+        });
+
+        document.getElementById("snakeImage").addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    snakeImage = new Image();
+                    snakeImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+              snakeImage = null;
+            }
+        });
+
+        document.getElementById("gameMode").addEventListener("change", (event) => {
+            gameMode = event.target.value;
+        });
+
         function drawSnake() {
             snake.forEach((segment, index) => {
-                ctx.fillStyle = index === 0 ? "#606468" : "#939598";
-                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+                if (snakeImage && index === 0) {
+                    ctx.drawImage(snakeImage, segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+                } else {
+                    ctx.fillStyle = index === 0 ? snakeColor : "#939598";
+                    ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+                }
             });
         }
 
         function drawFood() {
-            ctx.fillStyle = "#d32f2f";
+            ctx.fillStyle = foodColor;
             ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
         }
 
@@ -68,8 +125,10 @@
         function checkCollision() {
             const head = snake[0];
 
-            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-                return true;
+            if (gameMode === "classic" || gameMode === "walls") {
+                if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                    return true;
+                }
             }
 
             for (let i = 1; i < snake.length; i++) {
@@ -99,13 +158,13 @@
             ctx.fillStyle = "#606468";
             ctx.font = "30px Roboto, sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText("Skibidi Over!", canvas.width / 2, canvas.height / 2 - 20); //Skibidi Over!
+            ctx.fillText("Skibidi Over!", canvas.width / 2, canvas.height / 2 - 20);
             ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 20);
             ctx.textAlign = "start";
 
             setTimeout(() => {
-                const restart = confirm("Skibidi Again?"); //Skibidi again?
-                if(restart){
+                const restart = confirm("Skibidi Again?");
+                if (restart) {
                     resetGame();
                 }
             }, 500);
@@ -134,7 +193,11 @@
             drawSnake();
             drawFood();
             drawScore();
-            setTimeout(gameLoop, 100);
+            let speed = 100;
+            if(gameMode === "speedy"){
+              speed = 50;
+            }
+            setTimeout(gameLoop, speed);
         }
 
         document.addEventListener("keydown", event => {
