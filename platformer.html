@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Infinite Pixel Platformer</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #87CEEB;
+  }
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+  }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<canvas id="skinCanvas" style="display: none;"></canvas>
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const skinCanvas = document.getElementById("skinCanvas");
+  const skinCtx = skinCanvas.getContext("2d");
+
+  const scale = 3;
+  canvas.width = 800;
+  canvas.height = 600;
+
+  const player = {
+    x: 50,
+    y: 500,
+    width: 16 * scale,
+    height: 32 * scale,
+    velocityY: 0,
+    velocityX: 0,
+    jumping: false,
+    skin: createDefaultSkin(),
+  };
+
+  function createDefaultSkin() {
+    skinCanvas.width = 16;
+    skinCanvas.height = 32;
+    skinCtx.fillStyle = "red";
+    skinCtx.fillRect(0, 0, 16, 32);
+    return skinCanvas;
+  }
+
+  function drawPlayerSkin() {
+    ctx.drawImage(player.skin, player.x, player.y, player.width, player.height);
+  }
+
+  // Example: Change skin on key press (for testing)
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "s") {
+      player.skin = createRandomSkin(); //create new random skin.
+    }
+  });
+
+  function createRandomSkin() {
+    skinCanvas.width = 16;
+    skinCanvas.height = 32;
+    for(let y=0; y<32; y++){
+      for(let x=0; x<16; x++){
+        if(Math.random() < 0.3){
+          skinCtx.fillStyle = `rgb(${Math.random()*255},${Math.random()*255},${Math.random()*255})`;
+          skinCtx.fillRect(x,y,1,1);
+        }
+      }
+    }
+    return skinCanvas;
+  }
+
+  let platforms = [];
+  const platformWidth = 100 * scale;
+  const platformHeight = 20 * scale;
+  let worldOffset = 0;
+
+  function generatePlatforms() {
+    if (platforms.length === 0) {
+      platforms.push({ x: 0, y: 550, width: canvas.width * 2, height: 50 * scale, color: "green" });
+    }
+
+    while (platforms[platforms.length - 1].x + platforms[platforms.length - 1].width < canvas.width + worldOffset) {
+      const lastPlatform = platforms[platforms.length - 1];
+      const newX = lastPlatform.x + lastPlatform.width + Math.random() * 200 * scale;
+      const newY = Math.random() * (canvas.height - 200) + 100;
+      platforms.push({
+        x: newX,
+        y: newY,
+        width: platformWidth,
+        height: platformHeight,
+        color: `rgb(${Math.random() * 150 + 50}, ${Math.random() * 150 + 50}, ${Math.random() * 150 + 50})`,
+      });
+    }
+  }
+
+  const gravity = 0.8;
+  const jumpStrength = -15;
+  const moveSpeed = 7;
+
+  const keys = {};
+
+  document.addEventListener("keydown", (e) => {
+    keys[e.key] = true;
+  });
+
+  document.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
+  });
+
+  function update() {
+    if (keys["ArrowLeft"]) {
+      player.velocityX = -moveSpeed;
+    } else if (keys["ArrowRight"]) {
+      player.velocityX = moveSpeed;
+    } else {
+      player.velocityX = 0;
+    }
+
+    if (keys["ArrowUp"] && !player.jumping) {
+      player.velocityY = jumpStrength;
+      player.jumping = true;
+    }
+
+    player.velocityY += gravity;
+    player.y += player.velocityY;
+    player.x += player.velocityX;
+    worldOffset += -player.velocityX;
+
+    let grounded = false;
+    platforms.forEach((platform) => {
+      if (
+        player.x < platform.x + platform.width - worldOffset &&
+        player.x + player.width > platform.x - worldOffset &&
+        player.y + player.height > platform.y &&
+        player.y < platform.y + platform.height
+      ) {
+        if (player.velocityY > 0) {
+          player.y = platform.y - player.height;
+          player.velocityY = 0;
+          player.jumping = false;
+          grounded = true;
+        } else if (player.velocityY < 0) {
+          player.y = platform.y + platform.height;
+          player.velocityY = 0;
+        }
+      }
+    });
+    if (!grounded && player.y + player.height > canvas.height) {
+      player.y = canvas.height - player.height;
+      player.velocityY = 0;
+      player.jumping = false;
+    }
+
+    if (player.x < 0) player.x = 0;
+    if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+    if (player.y > canvas.height) {
+      player.y = canvas.height - player.height;
+    }
+    generatePlatforms();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    platforms.forEach((platform) => {
+      ctx.fillStyle = platform.color;
+      ctx.fillRect(platform.x - worldOffset, platform.y, platform.width, platform.height);
+    });
+    drawPlayerSkin();
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  gameLoop();
+</script>
+</body>
+</html>
