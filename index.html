@@ -1,154 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All-in-One Fun Zone</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        header {
-            background-color: #3498db;
-            color: white;
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        nav {
-            background-color: #2980b9;
-            padding: 10px 0;
-            text-align: center;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-        }
-
-        main {
-            padding: 20px;
-            flex-grow: 1;
-        }
-
-        section {
-            background-color: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        h2 {
-            color: #3498db;
-        }
-
-        #game-canvas {
-            width: 400px;
-            height: 300px;
-            border: 1px solid #ccc;
-            display: block;
-            margin: 20px auto;
-        }
-
-        #animation-container {
-            width: 200px;
-            height: 200px;
-            background-color: #e0e0e0;
-            margin: 20px auto;
-            position: relative;
-        }
-
-        #animated-box {
-            width: 50px;
-            height: 50px;
-            background-color: #e74c3c;
-            position: absolute;
-            animation: moveBox 2s linear infinite alternate;
-        }
-
-        @keyframes moveBox {
-            0% {
-                left: 0;
-                top: 0;
-            }
-            100% {
-                left: 150px;
-                top: 150px;
-            }
-        }
-
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 10px 0;
-        }
-
-        video {
-            display: block;
-            margin: 20px auto;
-            max-width: 100%;
-            height: auto;
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>Fun Zone</h1>
-    </header>
-
-    <nav>
-        <a href="#games">Games</a>
-        <a href="#animations">Animations</a>
-        <a href="#videos">Videos</a>
-    </nav>
-
-    <main>
-        <section id="games">
-            <h2>Simple Game</h2>
-            <canvas id="game-canvas"></canvas>
-            <script>
-                const canvas = document.getElementById('game-canvas');
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = 'lightblue';
-                ctx.fillRect(50, 50, 100, 100);
-                ctx.fillStyle = 'red';
-                ctx.beginPath();
-                ctx.arc(250, 150, 50, 0, 2 * Math.PI);
-                ctx.fill();
-            </script>
-        </section>
-
-        <section id="animations">
-            <h2>CSS Animation</h2>
-            <div id="animation-container">
-                <div id="animated-box"></div>
-            </div>
-        </section>
-
-        <section id="videos">
-            <h2>Video</h2>
-            <video controls>
-                <source src="https://file-examples.com/storage/fe59b0282d6289d0c242278/2017/04/file_example_MP4_480_1_5MG.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </section>
-    </main>
-
-    <footer>
-        <p>© 2024 Fun Zone</p>
-    </footer>
-
+<div>
+<script src="https://cdn.htmlgames.com/embed.js?game=Bubble_Shooter&amp;bgcolor=black"></script>
+</div>
+<div>
+<script src="https://cdn.htmlgames.com/embed.js?game=CarParkSort&amp;bgcolor=black"></script>
+</div>
+<div>
+<script src="https://cdn.htmlgames.com/embed.js?game=PacMaze&amp;bgcolor=black"></script>
+</div>
+<div>
+<script src="https://kirilllive.github.io/Fifteen_puzzle_maker/bgcolor=black"></script>
+</div>
 </body>
 </html>
