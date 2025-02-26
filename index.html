@@ -1,64 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
-<!DOCTYPE html>
 <html>
-
 <head>
-    <meta charset="UTF-8">
-    <title>Tetris Clone</title>
-    <script type="module" src="js/tetrisclone.js"></script>
-    <link rel="stylesheet" href="css/common.css"></link>
-    <link rel="stylesheet" href="css/tetrisclone.css"></link>
+    <title>Skibidi Snake</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #eee;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+    </style>
 </head>
-
 <body>
-    <h1>Tetris Clone</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-    <p>
-    The goal is to get as many blocks down as possible.
-    The game ends when a block can't go below the top of the game.
-    If there is a horizontal line that has no empty squares, then that line is removed.
-    </p>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-    <p>
-    All blocks of classic tetris consist of 4 squares,
-    but this game also has blocks that consist of 1, 2, 3, or 5 squares.
-    Also, classic tetris is 10 columns wide, but this game is 12 columns wide by default.
-    </p>
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
 
-    <div id="game-container">
-        <div id="game-inner-container">
-            <div id="game" class="game-area"></div>
-            <span id="game-statusbar"></span>
-        </div>
+        let snake = [{ x: 10, y: 10 }];
+        let food = { x: 5, y: 5 };
+        let dx = 1;
+        let dy = 0;
+        let score = 0;
+        let gameRunning = true;
 
-        <div class="setting-box">
-            <div class="setting-inputs">
-                <label for="width-input">Width:</label>
-                <input type="number" id="width-input" min="1" value="12" required />
-                <label for="height-input">Height:</label>
-                <input type="number" id="height-input" min="1" value="20" required />
-                <label for="initial-level-input">Level in the beginning of the game:</label>
-                <input type="number" id="initial-level-input" min="1" value="1" required />
-            </div>
+        function drawSnake() {
+            snake.forEach((segment, index) => {
+                ctx.fillStyle = index === 0 ? "#606468" : "#939598";
+                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+            });
+        }
 
-            <button id="new-game-button" class="new-game-button">New Game</button>
-        </div>
-    </div>
+        function drawFood() {
+            ctx.fillStyle = "#d32f2f";
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+        }
 
-    <p id="link2index"><a href="listofgames.html">Back to the list of games</a></p>
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                generateFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function generateFood() {
+            food = {
+                x: Math.floor(Math.random() * tileCount),
+                y: Math.floor(Math.random() * tileCount)
+            };
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                return true;
+            }
+
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function clearScreen() {
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawScore() {
+            ctx.fillStyle = "#606468";
+            ctx.font = "20px Roboto, sans-serif";
+            ctx.fillText("Score: " + score, 10, 20);
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#606468";
+            ctx.font = "30px Roboto, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("Skibidi Over!", canvas.width / 2, canvas.height / 2 - 20); //Skibidi Over!
+            ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 20);
+            ctx.textAlign = "start";
+
+            setTimeout(() => {
+                const restart = confirm("Skibidi Again?"); //Skibidi again?
+                if(restart){
+                    resetGame();
+                }
+            }, 500);
+        }
+
+        function resetGame() {
+            snake = [{ x: 10, y: 10 }];
+            dx = 1;
+            dy = 0;
+            score = 0;
+            generateFood();
+            gameRunning = true;
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+
+            clearScreen();
+            moveSnake();
+            drawSnake();
+            drawFood();
+            drawScore();
+            setTimeout(gameLoop, 100);
+        }
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "ArrowLeft" && dx !== 1) {
+                dx = -1;
+                dy = 0;
+            } else if (event.key === "ArrowRight" && dx !== -1) {
+                dx = 1;
+                dy = 0;
+            } else if (event.key === "ArrowUp" && dy !== 1) {
+                dy = -1;
+                dx = 0;
+            } else if (event.key === "ArrowDown" && dy !== -1) {
+                dy = 1;
+                dx = 0;
+            }
+        });
+
+        generateFood();
+        gameLoop();
+    </script>
 </body>
-
 </html>
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="UTF-8">
-    <title>Tetris Clone</title>
-    <script type="module" src="js/tetrisclone.js"></script>
-    <link rel="stylesheet" href="css/common.css"></link>
-    <link rel="stylesheet" href="css/tetrisclone.css"></link>
-</head>
-
-<body>
