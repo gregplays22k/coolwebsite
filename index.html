@@ -38,13 +38,6 @@
             color: #606468;
             font-family: Roboto, sans-serif;
         }
-        #restartButton {
-            padding: 10px 20px;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            cursor: pointer;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <button id="flappybirdbutton" onclick="location.href='flappybird.html'">flapy game</button>
@@ -68,14 +61,12 @@
     <div id="gameOverOverlay">
         <div>Skibidi Over!</div>
         <div id="finalScore"></div>
-        <button id="restartButton">Skibidi Again?</button>
     </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const gameOverOverlay = document.getElementById("gameOverOverlay");
-        const restartButton = document.getElementById("restartButton");
         const finalScore = document.getElementById("finalScore");
 
         const gridSize = 20;
@@ -192,6 +183,7 @@
             gameRunning = false;
             finalScore.textContent = "Score: " + score;
             gameOverOverlay.style.display = "flex";
+            setTimeout(resetGame, 1500); // Restart after 1.5 seconds
         }
 
         function resetGame() {
@@ -204,8 +196,6 @@
             gameOverOverlay.style.display = "none";
             gameLoop();
         }
-
-        restartButton.addEventListener("click", resetGame);
 
         function gameLoop() {
             if (!gameRunning) return;
@@ -230,4 +220,11 @@
         document.addEventListener("keydown", event => {
             if (event.key === "ArrowLeft" && dx !== 1) {
                 dx = -1;
-                dy =
+                dy = 0;
+            } else if (event.key === "ArrowRight" && dx !== -1) {
+                dx = 1;
+                dy = 0;
+            } else if (event.key === "ArrowUp" && dy !== 1) {
+                dy = -1;
+                dx = 0;
+            } else if (event.key === "
