@@ -24,9 +24,30 @@
             padding: 10px;
             border: 1px solid #ccc;
         }
+        #gameOverOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: #606468;
+            font-family: Roboto, sans-serif;
+        }
+        #restartButton {
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            margin-top: 20px;
+        }
     </style>
 </head>
-<button id="flapybirdbutton" onclick="location.href='flapybird.html'">flapy game</button>
+<button id="flappybirdbutton" onclick="location.href='flappybird.html'">flapy game</button>
 <button id="platformerButton" onclick="location.href='platformer.html'">platformer</button>
 <body>
     <div id="controls">
@@ -44,10 +65,18 @@
         </select>
     </div>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="gameOverOverlay">
+        <div>Skibidi Over!</div>
+        <div id="finalScore"></div>
+        <button id="restartButton">Skibidi Again?</button>
+    </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        const gameOverOverlay = document.getElementById("gameOverOverlay");
+        const restartButton = document.getElementById("restartButton");
+        const finalScore = document.getElementById("finalScore");
 
         const gridSize = 20;
         const tileCount = canvas.width / gridSize;
@@ -128,10 +157,15 @@
         function checkCollision() {
             const head = snake[0];
 
-            if (gameMode === "classic" || gameMode === "walls") {
+            if (gameMode === "classic") {
                 if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
                     return true;
                 }
+            } else if (gameMode === "walls") {
+                if (head.x < 0) head.x = tileCount - 1;
+                if (head.x >= tileCount) head.x = 0;
+                if (head.y < 0) head.y = tileCount - 1;
+                if (head.y >= tileCount) head.y = 0;
             }
 
             for (let i = 1; i < snake.length; i++) {
@@ -156,21 +190,8 @@
 
         function gameOver() {
             gameRunning = false;
-            ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#606468";
-            ctx.font = "30px Roboto, sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText("Skibidi Over!", canvas.width / 2, canvas.height / 2 - 20);
-            ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 20);
-            ctx.textAlign = "start";
-
-            setTimeout(() => {
-                const restart = confirm("Skibidi Again?");
-                if (restart) {
-                    resetGame();
-                }
-            }, 500);
+            finalScore.textContent = "Score: " + score;
+            gameOverOverlay.style.display = "flex";
         }
 
         function resetGame() {
@@ -180,8 +201,11 @@
             score = 0;
             generateFood();
             gameRunning = true;
+            gameOverOverlay.style.display = "none";
             gameLoop();
         }
+
+        restartButton.addEventListener("click", resetGame);
 
         function gameLoop() {
             if (!gameRunning) return;
@@ -206,21 +230,4 @@
         document.addEventListener("keydown", event => {
             if (event.key === "ArrowLeft" && dx !== 1) {
                 dx = -1;
-                dy = 0;
-            } else if (event.key === "ArrowRight" && dx !== -1) {
-                dx = 1;
-                dy = 0;
-            } else if (event.key === "ArrowUp" && dy !== 1) {
-                dy = -1;
-                dx = 0;
-            } else if (event.key === "ArrowDown" && dy !== -1) {
-                dy = 1;
-                dx = 0;
-            }
-        });
-
-        generateFood();
-        gameLoop();
-    </script>
-</body>
-</html>
+                dy =
