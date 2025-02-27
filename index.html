@@ -40,8 +40,6 @@
         }
     </style>
 </head>
-<button id="flappybirdbutton" onclick="flapybird.html='flappybird.html'">flapy game</button>
-<button id="platformerButton" onclick="platformer.html='platformer.html'">platformer</button>
 <body>
     <div id="controls">
         <label for="snakeColor">Snake Color:</label>
@@ -227,4 +225,14 @@
             } else if (event.key === "ArrowUp" && dy !== 1) {
                 dy = -1;
                 dx = 0;
-            } else if (event.key === "
+            } else if (event.key === "ArrowDown" && dy !== -1) {
+                dy = 1;
+                dx = 0;
+            }
+        });
+
+        generateFood();
+        gameLoop();
+    </script>
+</body>
+</html>
