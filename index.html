@@ -1,238 +1,138 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="google-site-verification" content="C2o0vSB_f57ZArwtckKfK6kyt44d2jX6aNierInUBfQ" />
-    <title>Skibidi Snake</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #eee;
-        }
-        canvas {
-            border: 1px solid #ccc;
-            background-color: #fff;
-        }
-        #controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border: 1px solid #ccc;
-        }
-        #gameOverOverlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            color: #606468;
-            font-family: Roboto, sans-serif;
-        }
-    </style>
+<meta name="google-site-verification" content="C2o0vSB_f57ZArwtckKfK6kyt44d2jX6aNierInUBfQ" />  
+<title>50 Games (Simplified)</title>
+  <style>
+    /* Common Styles */
+    #gameContainer { width: 400px; margin: 20px auto; text-align: center; }
+    .game { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: none; }
+    .cell { width: 50px; height: 50px; border: 1px solid black; display: inline-block; text-align: center; font-size: 2em; }
+    #maze { width: 200px; height: 200px; border: 1px solid black; position: relative; }
+    #player { width: 10px; height: 10px; background-color: blue; position: absolute; top: 0; left: 0; }
+    #colorBox { width: 100px; height: 100px; margin: 50px auto; }
+    #screen { width: 300px; height: 200px; background-color: white; }
+  </style>
 </head>
 <body>
-    <div id="controls">
-        <label for="snakeColor">Snake Color:</label>
-        <input type="color" id="snakeColor" value="#606468"><br>
-        <label for="foodColor">Food Color:</label>
-        <input type="color" id="foodColor" value="#d32f2f"><br>
-        <label for="snakeImage">Upload Snake Image:</label>
-        <input type="file" id="snakeImage" accept="image/*"><br>
-        <label for="gameMode">Game Mode:</label>
-        <select id="gameMode">
-            <option value="classic">Classic</option>
-            <option value="walls">Walls</option>
-            <option value="speedy">Speedy</option>
-        </select>
-    </div>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <div id="gameOverOverlay">
-        <div>Skibidi Over!</div>
-        <div id="finalScore"></div>
+  <div id="gameContainer">
+    <button onclick="showGame('clickColor')">Click the Color</button>
+    <button onclick="showGame('reactionTime')">Reaction Time</button>
+    <button onclick="showGame('simpleMaze')">Simple Maze</button>
+    <button onclick="showGame('ticTacToe')">Tic-Tac-Toe</button>
+    <button onclick="showGame('hangman')">Hangman</button>
+    <div id="clickColor" class="game">
+      <div id="colorBox"></div>
     </div>
 
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const gameOverOverlay = document.getElementById("gameOverOverlay");
-        const finalScore = document.getElementById("finalScore");
+    <div id="reactionTime" class="game">
+      <div id="screen"></div>
+    </div>
 
-        const gridSize = 20;
-        const tileCount = canvas.width / gridSize;
+    <div id="simpleMaze" class="game">
+      <div id="maze"><div id="player"></div></div>
+    </div>
 
-        let snake = [{ x: 10, y: 10 }];
-        let food = { x: 5, y: 5 };
-        let dx = 1;
-        let dy = 0;
-        let score = 0;
-        let gameRunning = true;
+    <div id="ticTacToe" class="game">
+      <div id="board"></div>
+    </div>
 
-        let snakeColor = "#606468";
-        let foodColor = "#d32f2f";
-        let snakeImage = null;
-        let gameMode = "classic";
+    <div id="hangman" class="game">
+      <div id="word"></div>
+      <input type="text" id="guess">
+      <button onclick="guessLetter()">Guess</button>
+    </div>
 
-        document.getElementById("snakeColor").addEventListener("change", (event) => {
-            snakeColor = event.target.value;
+    </div>
+
+  <script>
+    function showGame(gameId) {
+      document.querySelectorAll('.game').forEach(game => game.style.display = 'none');
+      document.getElementById(gameId).style.display = 'block';
+      initializeGame(gameId);
+    }
+
+    function initializeGame(gameId) {
+      if (gameId === 'clickColor') {
+        const box = document.getElementById('colorBox');
+        const colors = ['red', 'blue', 'green'];
+        let target = colors[Math.floor(Math.random() * colors.length)];
+        let current = colors[Math.floor(Math.random() * colors.length)];
+        while (current === target) { current = colors[Math.floor(Math.random() * colors.length)]; }
+        box.style.backgroundColor = current;
+        box.onclick = () => {
+          if (current === target) { alert('Lose!'); } else { alert('Win!'); }
+          location.reload();
+        };
+      } else if (gameId === 'reactionTime') {
+        const screen = document.getElementById('screen');
+        let startTime;
+        screen.onclick = () => {
+          if (startTime) {
+            alert('Reaction time: ' + (Date.now() - startTime) + 'ms');
+            location.reload();
+          }
+        };
+        setTimeout(() => {
+          screen.style.backgroundColor = 'red';
+          startTime = Date.now();
+        }, Math.random() * 3000 + 1000);
+      } else if (gameId === 'simpleMaze') {
+        const player = document.getElementById('player');
+        let x = 0, y = 0;
+        player.style.left = x + 'px';
+        player.style.top = y + 'px';
+        document.addEventListener('keydown', (e) => {
+          if (document.getElementById('simpleMaze').style.display === 'block'){
+            if (e.key === 'ArrowRight') x += 10;
+            if (e.key === 'ArrowLeft') x -= 10;
+            if (e.key === 'ArrowUp') y -= 10;
+            if (e.key === 'ArrowDown') y += 10;
+            player.style.left = x + 'px';
+            player.style.top = y + 'px';
+          }
         });
-
-        document.getElementById("foodColor").addEventListener("change", (event) => {
-            foodColor = event.target.value;
-        });
-
-        document.getElementById("snakeImage").addEventListener("change", (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    snakeImage = new Image();
-                    snakeImage.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                snakeImage = null;
+      } else if (gameId === 'ticTacToe') {
+        const board = document.getElementById('board');
+        let cells = Array(9).fill('');
+        let player = 'X';
+        board.innerHTML = ''; // Clear previous board
+        for (let i = 0; i < 9; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.index = i;
+          cell.onclick = () => {
+            if (cells[i] === '') {
+              cells[i] = player;
+              cell.textContent = player;
+              player = player === 'X' ? 'O' : 'X';
+              // Add basic win check here
             }
-        });
-
-        document.getElementById("gameMode").addEventListener("change", (event) => {
-            gameMode = event.target.value;
-        });
-
-        function drawSnake() {
-            snake.forEach((segment, index) => {
-                if (snakeImage && index === 0) {
-                    ctx.drawImage(snakeImage, segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
-                } else {
-                    ctx.fillStyle = index === 0 ? snakeColor : "#939598";
-                    ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
-                }
-            });
+          };
+          board.appendChild(cell);
         }
-
-        function drawFood() {
-            ctx.fillStyle = foodColor;
-            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
-        }
-
-        function moveSnake() {
-            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-            snake.unshift(head);
-
-            if (head.x === food.x && head.y === food.y) {
-                score++;
-                generateFood();
-            } else {
-                snake.pop();
+      } else if (gameId === 'hangman') {
+        const word = document.getElementById('word');
+        const guessInput = document.getElementById('guess');
+        const secretWord = 'hangman';
+        let guessed = Array(secretWord.length).fill('_');
+        word.textContent = guessed.join(' ');
+        guessInput.value = ''; //clear input
+        window.guessLetter= function() { //add to global scope.
+          const guess = guessInput.value;
+          for (let i = 0; i < secretWord.length; i++) {
+            if (secretWord[i] === guess) {
+              guessed[i] = guess;
             }
+          }
+          word.textContent = guessed.join(' ');
+          guessInput.value = '';
         }
-
-        function generateFood() {
-            food = {
-                x: Math.floor(Math.random() * tileCount),
-                y: Math.floor(Math.random() * tileCount)
-            };
-        }
-
-        function checkCollision() {
-            const head = snake[0];
-
-            if (gameMode === "classic") {
-                if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-                    return true;
-                }
-            } else if (gameMode === "walls") {
-                if (head.x < 0) head.x = tileCount - 1;
-                if (head.x >= tileCount) head.x = 0;
-                if (head.y < 0) head.y = tileCount - 1;
-                if (head.y >= tileCount) head.y = 0;
-            }
-
-            for (let i = 1; i < snake.length; i++) {
-                if (head.x === snake[i].x && head.y === snake[i].y) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        function clearScreen() {
-            ctx.fillStyle = "#fff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        function drawScore() {
-            ctx.fillStyle = "#606468";
-            ctx.font = "20px Roboto, sans-serif";
-            ctx.fillText("Score: " + score, 10, 20);
-        }
-
-        function gameOver() {
-            gameRunning = false;
-            finalScore.textContent = "Score: " + score;
-            gameOverOverlay.style.display = "flex";
-            setTimeout(resetGame, 1500); // Restart after 1.5 seconds
-        }
-
-        function resetGame() {
-            snake = [{ x: 10, y: 10 }];
-            dx = 1;
-            dy = 0;
-            score = 0;
-            generateFood();
-            gameRunning = true;
-            gameOverOverlay.style.display = "none";
-            gameLoop();
-        }
-
-        function gameLoop() {
-            if (!gameRunning) return;
-
-            if (checkCollision()) {
-                gameOver();
-                return;
-            }
-
-            clearScreen();
-            moveSnake();
-            drawSnake();
-            drawFood();
-            drawScore();
-            let speed = 100;
-            if (gameMode === "speedy") {
-                speed = 50;
-            }
-            setTimeout(gameLoop, speed);
-        }
-
-        document.addEventListener("keydown", event => {
-            if (event.key === "ArrowLeft" && dx !== 1) {
-                dx = -1;
-                dy = 0;
-            } else if (event.key === "ArrowRight" && dx !== -1) {
-                dx = 1;
-                dy = 0;
-            } else if (event.key === "ArrowUp" && dy !== 1) {
-                dy = -1;
-                dx = 0;
-            } else if (event.key === "ArrowDown" && dy !== -1) {
-                dy = 1;
-                dx = 0;
-            }
-        });
-
-        generateFood();
-        gameLoop();
-    </script>
+      }
+      // Add initialization logic for other games here
+    }
+    //Add 45 other game initializers here.
+  </script>
 </body>
 </html>
