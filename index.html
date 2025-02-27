@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>50 Fun Games</title>
-    <meta name="google-site-verification" content="C2o0vSB_f57ZArwtckKfK6kyt44d2jX6aNierInUBfQ" />
+    <title>10 Fun Games</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background-color: #333; color: #fff; text-align: center; padding: 1rem 0; }
@@ -14,10 +13,19 @@
         .game-item img { max-width: 100%; height: auto; }
         #game-container { margin-top: 20px; text-align: center; }
         canvas { border: 1px solid black; }
+        .back-button {
+          padding: 10px 20px;
+          background-color: #3498db;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-    <header><h1>50 Fun Games</h1></header>
+    <header><h1>10 Fun Games</h1></header>
     <main>
         <div class="game-grid"></div>
         <div id="game-container"></div>
@@ -28,139 +36,43 @@
         const gameContainer = document.getElementById('game-container');
 
         const games = [
-            { name: 'Snake', image: 'snake.png', file: 'snakeGame' },
-            { name: 'Flappy Bird', image: 'flappy.png', file: 'flappyBirdGame' },
-            { name: 'Memory Match', image: 'memory.png', file: 'memoryGame' },
-            { name: 'Tic-Tac-Toe', image: 'tictactoe.png', file: 'tictactoeGame' },
-            { name: '2048', image: '2048.png', file: 'game2048' },
-            { name: 'Pong', image: 'pong.png', file: 'pongGame'},
-            { name: 'Number Guessing', image: 'number.png', file: 'numberGuessingGame'},
-            { name: 'Rock Paper Scissors', image: 'rps.png', file: 'rpsGame'},
-            { name: 'Tetris', image: 'tetris.png', file: 'tetrisGame'},
-            { name: 'Maze', image: 'maze.png', file: 'mazeGame'},
-            // Add the rest of your 40 games here...
+            { name: 'Snake', image: 'snake.png', file: 'snake.js' },
+            { name: 'Flappy Bird', image: 'flappy.png', file: 'flappy.js' },
+            { name: 'Memory Match', image: 'memory.png', file: 'memory.js' },
+            { name: 'Tic-Tac-Toe', image: 'tictactoe.png', file: 'tictactoe.js' },
+            { name: '2048', image: '2048.png', file: '2048.js' },
+            { name: 'Pong', image: 'pong.png', file: 'pong.js' },
+            { name: 'Number Guessing', image: 'number.png', file: 'number.js' },
+            { name: 'Rock Paper Scissors', image: 'rps.png', file: 'rps.js' },
+            { name: 'Tetris', image: 'tetris.png', file: 'tetris.js' },
+            { name: 'Maze', image: 'maze.png', file: 'maze.js' },
         ];
 
         games.forEach(game => {
             const gameItem = document.createElement('div');
             gameItem.classList.add('game-item');
-            gameItem.innerHTML = `<img src="<span class="math-inline">\{game\.image\}" alt\="</span>{game.name}"><h3>${game.name}</h3>`;
+            gameItem.innerHTML = `<img src="${game.image}" alt="${game.name}"><h3>${game.name}</h3>`;
             gameItem.addEventListener('click', () => loadGame(game.file));
             gameGrid.appendChild(gameItem);
         });
 
-        function loadGame(gameName) {
+        function loadGame(gameFile) {
             gameContainer.innerHTML = '';
-            if (gameName === 'snakeGame') { runSnakeGame(); }
-            else if (gameName === 'flappyBirdGame') { runFlappyBirdGame(); }
-            else if (gameName === 'memoryGame') { runMemoryGame(); }
-            else if (gameName === 'tictactoeGame') { runTicTacToeGame(); }
-            else if (gameName === 'game2048') { run2048Game();}
-            else if (gameName === 'pongGame') { runPongGame();}
-            else if (gameName === 'numberGuessingGame') { runNumberGuessingGame();}
-            else if (gameName === 'rpsGame') { runRpsGame();}
-            else if (gameName === 'tetrisGame') { runTetrisGame();}
-            else if (gameName === 'mazeGame') { runMazeGame();}
-            // Add else if statements for the rest of your 40 games
+            const script = document.createElement('script');
+            script.src = gameFile;
+            script.onload = () => { // add back button once the script is loaded.
+                const backButton = document.createElement('button');
+                backButton.textContent = 'Back to Main Page';
+                backButton.classList.add('back-button');
+                backButton.addEventListener('click', () => {
+                    gameContainer.innerHTML = '';
+                    gameGrid.style.display = 'grid';
+                });
+                gameContainer.appendChild(backButton);
+            };
+            gameContainer.appendChild(script);
+            gameGrid.style.display = 'none';
         }
-
-        // ... (Snake, Flappy Bird, Memory, Tic-Tac-Toe, 2048, Pong, Number Guessing, RPS games) ...
-
-        function runTetrisGame() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 300;
-            canvas.height = 600;
-            gameContainer.appendChild(canvas);
-
-            // Basic Tetris implementation (simplified)
-            const gridSize = 30;
-            const gridWidth = canvas.width / gridSize;
-            const gridHeight = canvas.height / gridSize;
-            let grid = Array(gridHeight).fill(null).map(() => Array(gridWidth).fill(0));
-            let currentPiece = null;
-            let currentX = 0;
-            let currentY = 0;
-
-            const pieces = [
-                [[1, 1, 1, 1]], // I-shape
-                [[1, 1], [1, 1]], // O-shape
-                [[1, 1, 0], [0, 1, 1]], // Z-shape
-                [[0, 1, 1], [1, 1, 0]], // S-shape
-                [[1, 0, 0], [1, 1, 1]], // L-shape
-                [[0, 0, 1], [1, 1, 1]], // J-shape
-                [[0, 1, 0], [1, 1, 1]], // T-shape
-            ];
-
-            function newPiece() {
-                currentPiece = pieces[Math.floor(Math.random() * pieces.length)];
-                currentX = Math.floor(gridWidth / 2) - Math.floor(currentPiece[0].length / 2);
-                currentY = 0;
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                for (let y = 0; y < gridHeight; y++) {
-                    for (let x = 0; x < gridWidth; x++) {
-                        if (grid[y][x]) {
-                            ctx.fillStyle = 'blue';
-                            ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
-                        }
-                    }
-                }
-                if (currentPiece) {
-                    for (let y = 0; y < currentPiece.length; y++) {
-                        for (let x = 0; x < currentPiece[y].length; x++) {
-                            if (currentPiece[y][x]) {
-                                ctx.fillStyle = 'red';
-                                ctx.fillRect((currentX + x) * gridSize, (currentY + y) * gridSize, gridSize, gridSize);
-                            }
-                        }
-                    }
-                }
-            }
-
-            function update() {
-                // Simplified movement and collision detection
-                if (currentPiece) {
-                    if (currentY + currentPiece.length < gridHeight) {
-                        currentY++;
-                    } else {
-                        for (let y = 0; y < currentPiece.length; y++) {
-                            for (let x = 0; x < currentPiece[y].length; x++) {
-                                if (currentPiece[y][x]) {
-                                    grid[currentY + y][currentX + x] = 1;
-                                }
-                            }
-                        }
-                        newPiece();
-                    }
-                } else {
-                    newPiece();
-                }
-            }
-
-            setInterval(() => {
-                update();
-                draw();
-            }, 500);
-
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'ArrowLeft' && currentX > 0) {
-                    currentX--;
-                } else if (event.key === 'ArrowRight' && currentX + currentPiece[0].length < gridWidth) {
-                    currentX++;
-                }
-            });
-        }
-
-        function runMazeGame() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 400;
-            canvas.height = 400;
-            gameContainer.appendChild(canvas);
-
-            // Basic Maze implementation (simplified)
-            const gridSize = 20;
-            const mazeWidth = canvas.width / gridSize
+    </script>
+</body>
+</html>
