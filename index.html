@@ -9,9 +9,12 @@
     .game { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: none; }
     .cell { width: 50px; height: 50px; border: 1px solid black; display: inline-block; text-align: center; font-size: 2em; }
     #maze, #snakeCanvas, #flyingCanvas, #flappyCanvas, #platformerCanvas { border: 1px solid black; }
-    #player { width: 10px; height: 10px; background-color: blue; position: absolute; top: 0; left: 0; }
+    #player { width: 10px; height: 10px; position: absolute; top: 0; left: 0; }
     #colorBox { width: 100px; height: 100px; margin: 50px auto; }
     #screen { width: 300px; height: 200px; background-color: white; }
+    #colorControls { display: flex; flex-wrap: wrap; justify-content: space-around;}
+    .colorInput{width: 80px; margin: 5px; }
+
   </style>
 </head>
 <body>
@@ -26,6 +29,13 @@
     <button onclick="showGame('flyingGame')">Flying Game</button>
     <button onclick="showGame('flappyBird')">Flappy Bird</button>
     <button onclick="showGame('platformer')">Platformer</button>
+    <div id="colorControls">
+      <input type="color" id="playerColor" class="colorInput" value="#0000FF" data-target="playerColor">
+      <input type="color" id="snakeColor" class="colorInput" value="#8FBC8F" data-target="snakeColor">
+      <input type="color" id="foodColor" class="colorInput" value="#FF0000" data-target="foodColor">
+      <input type="color" id="mazeWallColor" class="colorInput" value="#000000" data-target="mazeWallColor">
+      <input type="color" id="backgroundColor" class="colorInput" value="#FFFFFF" data-target="backgroundColor">
+    </div>
     <div id="clickColor" class="game">
       <div id="colorBox"></div>
     </div>
@@ -65,6 +75,26 @@
   </div>
 
   <script>
+    let playerColor = '#0000FF';
+    let snakeColor = '#8FBC8F';
+    let foodColor = '#FF0000';
+    let mazeWallColor = '#000000';
+    let backgroundColor = '#FFFFFF';
+
+    document.querySelectorAll('.colorInput').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const target = e.target.dataset.target;
+        window[target] = e.target.value;
+        updateColors();
+      });
+    });
+    function updateColors(){
+        const player = document.getElementById('player');
+        if(player){
+            player.style.backgroundColor=playerColor;
+        }
+
+    }
     function showGame(gameId) {
       document.querySelectorAll('.game').forEach(game => game.style.display = 'none');
       document.getElementById(gameId).style.display = 'block';
@@ -77,6 +107,7 @@
         // ... (Reaction Time logic)
       } else if (gameId === 'simpleMaze') {
         // ... (Simple Maze logic)
+        updateColors();
       } else if (gameId === 'ticTacToe') {
         // ... (Tic-Tac-Toe logic)
       } else if (gameId === 'hangman') {
@@ -96,18 +127,17 @@
     function initializeSnake() {
         const canvas = document.getElementById('snakeCanvas');
         const ctx = canvas.getContext('2d');
-        // ... (Snake game logic)
         let snake = [{x: 200, y: 200}];
         let dx = 10;
         let dy = 0;
         let food = {x: Math.floor(Math.random() * 39) * 10, y: Math.floor(Math.random() * 39) * 10};
 
         function drawSnakePart(snakePart) {
-            ctx.fillStyle = 'lightgreen';
+            ctx.fillStyle = snakeColor;
             ctx.fillRect(snakePart.x, snakePart.y, 10, 10);
         }
         function drawFood() {
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = foodColor;
             ctx.fillRect(food.x, food.y, 10, 10);
         }
         function moveSnake() {
@@ -131,34 +161,4 @@
         document.addEventListener('keydown', (e) => {
           if (e.key === 'ArrowRight' && dx !== -10) {dx = 10; dy = 0;}
           if (e.key === 'ArrowLeft' && dx !== 10) {dx = -10; dy = 0;}
-          if (e.key === 'ArrowUp' && dy !== 10) {dx = 0; dy = -10;}
-          if (e.key === 'ArrowDown' && dy !== -10) {dx = 0; dy = 10;}
-        });
-        main();
-
-    }
-    function initializeMazeGame() {
-        // ... (Maze game logic)
-        const canvas = document.getElementById('mazeCanvas');
-        const ctx = canvas.getContext('2d');
-        // Simple Maze Example (replace with actual maze generation)
-        ctx.fillStyle = 'black';
-        ctx.fillRect(50, 0, 10, 300);
-        ctx.fillRect(200, 100, 10, 300);
-        ctx.fillRect(300, 0, 10, 200);
-        let playerX = 0;
-        let playerY = 0;
-        function drawPlayer() {
-          ctx.fillStyle = 'blue';
-          ctx.fillRect(playerX, playerY, 10, 10);
-        }
-        function clearPlayer(){ctx.clearRect(0,0,canvas.width,canvas.height);}
-        drawPlayer();
-        document.addEventListener('keydown', (e) => {
-          clearPlayer();
-          if (e.key === 'ArrowRight') playerX += 10;
-          if (e.key === 'ArrowLeft') playerX -= 10;
-          if (e.key === 'ArrowUp') playerY -= 10;
-          if (e.key === 'ArrowDown') playerY += 10;
-          drawPlayer();
-        });
+          if (e.key === 'ArrowUp' && dy !== 1
