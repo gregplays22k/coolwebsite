@@ -4,129 +4,191 @@
 <meta name="google-site-verification" content="C2o0vSB_f57ZArwtckKfK6kyt44d2jX6aNierInUBfQ" />
 <title>50 Games (Simplified)</title>
 <style>
-    /* Common Styles */
-    #gameContainer { width: 400px; margin: 20px auto; text-align: center; }
-    .game { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: none; }
-    .cell { width: 50px; height: 50px; border: 1px solid black; display: inline-block; text-align: center; font-size: 2em; }
-    #maze, #snakeCanvas, #flyingCanvas, #flappyCanvas, #platformerCanvas, #memoryCanvas, #typingGame, #numberGuessing, #rockPaperScissors, #simonCanvas, #spaceInvadersCanvas, #puzzleCanvas, #cardMatchingCanvas, #pongCanvas, #tetrisCanvas { border: 1px solid black; }
-    #player { width: 10px; height: 10px; position: absolute; top: 0; left: 0; }
-    #colorBox { width: 100px; height: 100px; margin: 50px auto; }
-    #screen { width: 300px; height: 200px; background-color: white; }
-    #colorControls { display: flex; flex-wrap: wrap; justify-content: space-around;}
-    .colorInput{width: 80px; margin: 5px; }
-    #board { display: grid; grid-template-columns: repeat(3, 50px); gap: 2px; }
-    .board-cell { width: 50px; height: 50px; border: 1px solid black; display: flex; align-items: center; justify-content: center; font-size: 2em; cursor: pointer; }
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #gameContainer {
+        width: 80%;
+        max-width: 800px;
+        margin: 20px auto;
+        text-align: center;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #gameContainer button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    #gameContainer button:hover {
+        background-color: #0056b3;
+    }
+
+    .game {
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        display: none;
+        text-align: center;
+    }
+
+    .cell {
+        width: 50px;
+        height: 50px;
+        border: 1px solid black;
+        display: inline-block;
+        text-align: center;
+        font-size: 2em;
+        line-height: 50px;
+    }
+
+    #maze, #snakeCanvas, #flyingCanvas, #flappyCanvas, #platformerCanvas {
+        border: 1px solid black;
+        margin: 10px auto;
+        display: block;
+    }
+
+    #player {
+        width: 10px;
+        height: 10px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: blue;
+    }
+
+    #colorBox {
+        width: 100px;
+        height: 100px;
+        margin: 20px auto;
+        border: 1px solid #ccc;
+    }
+
+    #screen {
+        width: 300px;
+        height: 200px;
+        background-color: white;
+        border: 1px solid #ccc;
+        margin: 20px auto;
+    }
+
+    #board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        width: 165px;
+        margin: 20px auto;
+    }
+
+    #hangman input[type="text"] {
+        padding: 8px;
+        margin: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    #hangman button {
+        padding: 8px 15px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #hangman button:hover {
+        background-color: #218838;
+    }
+
+    footer {
+        text-align: center;
+        padding: 20px 0;
+        background-color: #333;
+        color: white;
+        width: 100%;
+    }
 </style>
 </head>
 <body>
-<div id="gameContainer">
-    <button onclick="showGame('clickColor')">Click the Color</button>
-    <button onclick="showGame('reactionTime')">Reaction Time</button>
-    <button onclick="showGame('simpleMaze')">Simple Maze</button>
-    <button onclick="showGame('ticTacToe')">Tic-Tac-Toe</button>
-    <button onclick="showGame('hangman')">Hangman</button>
-    <button onclick="showGame('snake')">Snake</button>
-    <button onclick="showGame('mazeGame')">Maze Game</button>
-    <button onclick="showGame('flyingGame')">Flying Game</button>
-    <button onclick="showGame('flappyBird')">Flappy Bird</button>
-    <button onclick="showGame('platformer')">Platformer</button>
-    <button onclick="showGame('memoryGame')">Memory Game</button>
-    <button onclick="showGame('typingGame')">Typing Game</button>
-    <button onclick="showGame('numberGuessing')">Number Guessing</button>
-    <button onclick="showGame('rockPaperScissors')">Rock Paper Scissors</button>
-    <button onclick="showGame('simonSays')">Simon Says</button>
-    <button onclick="showGame('spaceInvaders')">Space Invaders</button>
-    <button onclick="showGame('puzzleGame')">Puzzle Game</button>
-    <button onclick="showGame('cardMatching')">Card Matching</button>
-    <button onclick="showGame('pong')">Pong</button>
-    <button onclick="showGame('tetris')">Tetris</button>
-    <div id="colorControls">
-        <input type="color" id="playerColor" class="colorInput" value="#0000FF" data-target="playerColor">
-        <input type="color" id="snakeColor" class="colorInput" value="#8FBC8F" data-target="snakeColor">
-        <input type="color" id="foodColor" class="colorInput" value="#FF0000" data-target="foodColor">
-        <input type="color" id="mazeWallColor" class="colorInput" value="#000000" data-target="mazeWallColor">
-        <input type="color" id="backgroundColor" class="colorInput" value="#FFFFFF" data-target="backgroundColor">
+    <div id="gameContainer">
+        <h1>50 Games (Simplified)</h1>
+        <button onclick="showGame('clickColor')">Click the Color</button>
+        <button onclick="showGame('reactionTime')">Reaction Time</button>
+        <button onclick="showGame('simpleMaze')">Simple Maze</button>
+        <button onclick="showGame('ticTacToe')">Tic-Tac-Toe</button>
+        <button onclick="showGame('hangman')">Hangman</button>
+        <button onclick="showGame('snake')">Snake</button>
+        <button onclick="showGame('mazeGame')">Maze Game</button>
+        <button onclick="showGame('flyingGame')">Flying Game</button>
+        <button onclick="showGame('flappyBird')">Flappy Bird</button>
+        <button onclick="showGame('platformer')">Platformer</button>
+
+        <div id="clickColor" class="game">
+            <div id="colorBox"></div>
+        </div>
+
+        <div id="reactionTime" class="game">
+            <div id="screen"></div>
+        </div>
+
+        <div id="simpleMaze" class="game">
+            <div id="maze"><div id="player"></div></div>
+        </div>
+
+        <div id="ticTacToe" class="game">
+            <div id="board"></div>
+        </div>
+
+        <div id="hangman" class="game">
+            <div id="word"></div>
+            <input type="text" id="guess">
+            <button onclick="guessLetter()">Guess</button>
+        </div>
+
+        <div id="snake" class="game">
+            <canvas id="snakeCanvas" width="400" height="400"></canvas>
+        </div>
+
+        <div id="mazeGame" class="game">
+            <canvas id="mazeCanvas" width="400" height="400"></canvas>
+        </div>
+
+        <div id="flyingGame" class="game">
+            <canvas id="flyingCanvas" width="400" height="400"></canvas>
+        </div>
+
+        <div id="flappyBird" class="game">
+            <canvas id="flappyCanvas" width="300" height="400"></canvas>
+        </div>
+
+        <div id="platformer" class="game">
+            <canvas id="platformerCanvas" width="600" height="400"></canvas>
+        </div>
     </div>
-    <div id="clickColor" class="game">
-        <div id="colorBox"></div>
-        <div id="scoreColor">Score: 0</div>
-    </div>
-    <div id="reactionTime" class="game">
-        <div id="screen"></div>
-        <div id="reactionScore">Score: 0</div>
-    </div>
-    <div id="simpleMaze" class="game">
-        <div id="maze"><div id="player"></div></div>
-    </div>
-    <div id="ticTacToe" class="game">
-        <div id="board"></div>
-        <div id="ticTacToeResult"></div>
-    </div>
-    <div id="hangman" class="game">
-        <div id="word"></div>
-        <input type="text" id="guess">
-        <button onclick="guessLetter()">Guess</button>
-        <div id="hangmanMessage"></div>
-    </div>
-    <div id="snake" class="game">
-        <canvas id="snakeCanvas" width="400" height="400"></canvas>
-        <div id="snakeScore">Score: 0</div>
-    </div>
-    <div id="mazeGame" class="game">
-        <canvas id="mazeCanvas" width="400" height="400"></canvas>
-    </div>
-    <div id="flyingGame" class="game">
-        <canvas id="flyingCanvas" width="400" height="400"></canvas>
-    </div>
-    <div id="flappyBird" class="game">
-        <canvas id="flappyCanvas" width="300" height="400"></canvas>
-        <div id="flappyScore">Score: 0</div>
-    </div>
-    <div id="platformer" class="game">
-        <canvas id="platformerCanvas" width="600" height="400"></canvas>
-    </div>
-    <div id="memoryGame" class="game">
-        <canvas id="memoryCanvas" width="400" height="400"></canvas>
-    </div>
-    <div id="typingGame" class="game">
-        <div id="typingText"></div>
-        <input type="text" id="typingInput">
-        <div id="typingResult"></div>
-    </div>
-    <div id="numberGuessing" class="game">
-        <div id="numberGuessMessage">Guess a number between 1 and 100:</div>
-        <input type="number" id="numberGuessInput">
-        <button onclick="checkGuess()">Guess</button>
-        <div id="numberGuessResult"></div>
-    </div>
-    <div id="rockPaperScissors" class="game">
-        <button onclick="playRPS('rock')">Rock</button>
-        <button onclick="playRPS('paper')">Paper</button>
-        <button onclick="playRPS('scissors')">Scissors</button>
-        <div id="rpsResult"></div>
-    </div>
-    <div id="simonSays" class="game">
-        <canvas id="simonCanvas" width="200" height="200"></canvas>
-        <div id="simonMessage"></div>
-    </div>
-    <div id="spaceInvaders" class="game">
-        <canvas id="spaceInvadersCanvas" width="400" height="400"></canvas>
-    </div>
-    <div id="puzzleGame" class="game">
-        <canvas id="puzzleCanvas" width="300" height="300"></canvas>
-    </div>
-    <div id="cardMatching" class="game">
-        <canvas id="cardMatchingCanvas" width="400" height="400"></canvas>
-    </div>
-    <div id="pong" class="game">
-        <canvas id="pongCanvas" width="400" height="300"></canvas>
-    </div>
-    <div id="tetris" class="game">
-        <canvas id="tetrisCanvas" width="300" height="600"></canvas>
-    </div>
-</div>
-<script>
-    let playerColor = '#0000FF';
-    let snakeColor = '#8FBC8F';
-    let foodColor = '#FF0000';
-    let mazeWallColor = '#000000';
+
+    <footer>
+        <p>&copy; 2024 Simple Games</p>
+    </footer>
+
+    <script>
+        // ... (JavaScript code from previous responses) ...
+    </script>
+</body>
+</html>
