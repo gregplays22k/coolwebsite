@@ -1,0 +1,8 @@
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 400; canvas.height = 400; document.getElementById('game-container').appendChild(canvas);
+const gridSize = 20; let snake = [{ x: 200, y: 200 }]; let food = { x: 100, y: 100 }; let dx = gridSize; let dy = 0; let score = 0;
+function draw() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = 'green'; snake.forEach(segment => { ctx.fillRect(segment.x, segment.y, gridSize, gridSize); }); ctx.fillStyle = 'red'; ctx.fillRect(food.x, food.y, gridSize, gridSize); }
+function update() { const head = { x: snake[0].x + dx, y: snake[0].y + dy }; snake.unshift(head); if (head.x === food.x && head.y === food.y) { score++; food = { x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize, y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize, }; } else { snake.pop(); } if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)) { alert(`Game Over! Score: ${score}`); snake = [{ x: 200, y: 200 }]; dx = gridSize; dy = 0; score = 0; food = { x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize, y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize, }; } }
+document.addEventListener('keydown', event => { if (event.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -gridSize; } if (event.key === 'ArrowDown' && dy === 0) { dx = 0; dy = gridSize; } if (event.key === 'ArrowLeft' && dx === 0) { dx = -gridSize; dy = 0; } if (event.key === 'ArrowRight' && dx === 0) { dx = gridSize; dy = 0; } });
+setInterval(() => { update(); draw(); }, 100);
