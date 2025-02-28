@@ -1,118 +1,116 @@
-// basketbros.js
+// Create game container
+const gameContainer = document.createElement('div');
+gameContainer.id = 'game';
+gameContainer.style.position = 'relative';
+gameContainer.style.width = '400px';
+gameContainer.style.height = '800px';
+gameContainer.style.background = 'lightgray';
+gameContainer.style.border = '2px solid black';
+document.body.appendChild(gameContainer);
 
-// --- HTML Structure ---
+// Create player
+const player = document.createElement('div');
+player.id = 'player';
+player.style.position = 'absolute';
+player.style.width = '20px';
+player.style.height = '40px';
+player.style.background = 'blue';
+player.style.bottom = '0px';
+player.style.left = '190px';
+gameContainer.appendChild(player);
 
-// Header
-const header = document.createElement('div');
-header.id = 'header';
-// Add logo, title, etc. here (dynamically)
-document.body.appendChild(header);
+// Create basketball hoop
+const hoop = document.createElement('div');
+hoop.id = 'hoop';
+hoop.style.position = 'absolute';
+hoop.style.width = '60px';
+hoop.style.height = '20px';
+hoop.style.background = 'orange';
+hoop.style.top = '50px';
+hoop.style.left = '170px';
+hoop.style.borderRadius = '50%';
+gameContainer.appendChild(hoop);
 
-// Main Content
-const mainContent = document.createElement('div');
-mainContent.id = 'main-content';
+// Create basketball
+const basketball = document.createElement('div');
+basketball.id = 'basketball';
+basketball.style.position = 'absolute';
+basketball.style.width = '20px';
+basketball.style.height = '20px';
+basketball.style.background = 'brown';
+basketball.style.bottom = '40px';
+basketball.style.left = '190px';
+basketball.style.borderRadius = '50%';
+gameContainer.appendChild(basketball);
 
-// Game Canvas
-const gameCanvas = document.createElement('canvas');
-gameCanvas.id = 'game-canvas';
-mainContent.appendChild(gameCanvas);
+let basketballThrown = false;
 
-// Other elements (e.g., buttons, score displays)
-// ... (Add dynamically)
+document.addEventListener('keydown', handleKeyPress);
 
-document.body.appendChild(mainContent);
+function handleKeyPress(event) {
+    const playerPos = player.getBoundingClientRect();
+    const gamePos = gameContainer.getBoundingClientRect();
 
-// Footer
-const footer = document.createElement('div');
-footer.id = 'footer';
-// Add copyright, links, etc. here (dynamically)
-document.body.appendChild(footer);
+    if (event.key === 'ArrowLeft' && playerPos.left > gamePos.left) {
+        player.style.left = `${player.offsetLeft - 20}px`;
+        if (!basketballThrown) {
+            basketball.style.left = `${player.offsetLeft - 20}px`;
+        }
+    } else if (event.key === 'ArrowRight' && playerPos.right < gamePos.right) {
+        player.style.left = `${player.offsetLeft + 20}px`;
+        if (!basketballThrown) {
+            basketball.style.left = `${player.offsetLeft + 20}px`;
+        }
+    } else if (event.key === ' ') { // Spacebar to shoot
+        if (!basketballThrown) {
+            shootBasketball();
+        }
+    }
+}
 
-// --- CSS Styling ---
+function shootBasketball() {
+    basketballThrown = true;
+    let shootInterval = setInterval(() => {
+        basketball.style.bottom = `${parseInt(basketball.style.bottom) + 10}px`;
+        if (parseInt(basketball.style.bottom) >= 750) {
+            clearInterval(shootInterval);
+            checkWinCondition();
+        }
+    }, 50);
+}
 
+function checkWinCondition() {
+    const basketballPos = basketball.getBoundingClientRect();
+    const hoopPos = hoop.getBoundingClientRect();
+    
+    if (
+        basketballPos.left >= hoopPos.left &&
+        basketballPos.right <= hoopPos.right &&
+        basketballPos.top <= hoopPos.bottom &&
+        basketballPos.bottom >= hoopPos.top
+    ) {
+        alert("Score! You made the shot!");
+    } else {
+        alert("Miss! Try again!");
+    }
+    resetGame();
+}
+
+function resetGame() {
+    basketballThrown = false;
+    basketball.style.bottom = '40px';
+    basketball.style.left = player.style.left;
+}
+
+// Styling (optional)
 const style = document.createElement('style');
-style.textContent = `
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: sans-serif;
-    background-color: #f0f0f0;
-  }
-
-  #header {
-    text-align: center;
-    padding: 20px;
-    background-color: #e0e0e0;
-  }
-
-  #main-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-  }
-
-  #game-canvas {
-    border: 1px solid black;
-    background-color: lightblue;
-  }
-
-  #footer {
-    text-align: center;
-    padding: 10px;
-    background-color: #e0e0e0;
-  }
-
-  /* Add more styles to match basketbros.io */
+style.innerHTML = `
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
 `;
 document.head.appendChild(style);
-
-// --- Game Logic (Placeholder) ---
-
-const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
-
-// Game state variables
-let player1X = 100;
-let player1Y = 200;
-let player2X = 300;
-let player2Y = 200;
-
-function drawPlayers() {
-  ctx.fillStyle = 'red';
-  ctx.fillRect(player1X, player1Y, 20, 40);
-  ctx.fillStyle = 'blue';
-  ctx.fillRect(player2X, player2Y, 20, 40);
-}
-
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawPlayers();
-  // ... (Add game logic, physics, animations, input handling, etc.)
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
-
-// Input handling (Example)
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft') {
-    player1X -= 5;
-  }
-  // ... (Add other key handlers)
-});
-
-// --- Image Loading (Example - Adapt to your images) ---
-const player1Image = new Image();
-player1Image.src = 'player1.png'; // Replace with your image path
-
-player1Image.onload = function() {
-    // Now that the image is loaded, you can use it in your draw function.
-    // For example, instead of ctx.fillRect(), you could use ctx.drawImage()
-}
-
-// Example of using the image
-function drawPlayersWithImages() {
-    ctx.drawImage(player1Image, player1X, player1Y, 20, 40);
-    // Add player 2 image drawing here.
-}
