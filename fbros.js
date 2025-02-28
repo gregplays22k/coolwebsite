@@ -1,66 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>American Football Game</title>
-    <style>
-        #game {
-            position: relative;
-            width: 400px;
-            height: 800px;
-            background: green;
-            border: 2px solid black;
-        }
+// Create game container
+const gameContainer = document.createElement('div');
+gameContainer.id = 'game';
+gameContainer.style.position = 'relative';
+gameContainer.style.width = '400px';
+gameContainer.style.height = '800px';
+gameContainer.style.background = 'green';
+gameContainer.style.border = '2px solid black';
+document.body.appendChild(gameContainer);
 
-        #player {
-            position: absolute;
-            width: 20px;
-            height: 40px;
-            background: blue;
-            top: 760px;
-            left: 190px;
-        }
-    </style>
-</head>
-<body>
-    <div id="game">
-        <div id="player"></div>
-    </div>
-    <script>
-        document.addEventListener('keydown', movePlayer);
+// Create player
+const player = document.createElement('div');
+player.id = 'player';
+player.style.position = 'absolute';
+player.style.width = '20px';
+player.style.height = '40px';
+player.style.background = 'blue';
+player.style.top = '760px';
+player.style.left = '190px';
+gameContainer.appendChild(player);
 
-        function movePlayer(event) {
-            const player = document.getElementById('player');
-            const game = document.getElementById('game');
-            const playerPos = player.getBoundingClientRect();
-            const gamePos = game.getBoundingClientRect();
+document.addEventListener('keydown', movePlayer);
 
-            if (event.key === 'ArrowUp' && playerPos.top > gamePos.top) {
-                player.style.top = `${player.offsetTop - 20}px`;
-            } else if (event.key === 'ArrowDown' && playerPos.bottom < gamePos.bottom) {
-                player.style.top = `${player.offsetTop + 20}px`;
-            } else if (event.key === 'ArrowLeft' && playerPos.left > gamePos.left) {
-                player.style.left = `${player.offsetLeft - 20}px`;
-            } else if (event.key === 'ArrowRight' && playerPos.right < gamePos.right) {
-                player.style.left = `${player.offsetLeft + 20}px`;
-            }
+function movePlayer(event) {
+    const playerPos = player.getBoundingClientRect();
+    const gamePos = gameContainer.getBoundingClientRect();
 
-            checkWinCondition(playerPos, gamePos);
-        }
+    if (event.key === 'ArrowUp' && playerPos.top > gamePos.top) {
+        player.style.top = `${player.offsetTop - 20}px`;
+    } else if (event.key === 'ArrowDown' && playerPos.bottom < gamePos.bottom) {
+        player.style.top = `${player.offsetTop + 20}px`;
+    } else if (event.key === 'ArrowLeft' && playerPos.left > gamePos.left) {
+        player.style.left = `${player.offsetLeft - 20}px`;
+    } else if (event.key === 'ArrowRight' && playerPos.right < gamePos.right) {
+        player.style.left = `${player.offsetLeft + 20}px`;
+    }
 
-        function checkWinCondition(playerPos, gamePos) {
-            if (playerPos.top <= gamePos.top) {
-                alert("Touchdown! You win!");
-                resetGame();
-            }
-        }
+    checkWinCondition(playerPos, gamePos);
+}
 
-        function resetGame() {
-            const player = document.getElementById('player');
-            player.style.top = '760px';
-            player.style.left = '190px';
-        }
-    </script>
-</body>
-</html>
+function checkWinCondition(playerPos, gamePos) {
+    if (playerPos.top <= gamePos.top) {
+        alert("Touchdown! You win!");
+        resetGame();
+    }
+}
+
+function resetGame() {
+    player.style.top = '760px';
+    player.style.left = '190px';
+}
+
+// Styling (optional)
+const style = document.createElement('style');
+style.innerHTML = `
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+`;
+document.head.appendChild(style);
