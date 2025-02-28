@@ -1,110 +1,66 @@
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-document.body.appendChild(canvas);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>American Football Game</title>
+    <style>
+        #game {
+            position: relative;
+            width: 400px;
+            height: 800px;
+            background: green;
+            border: 2px solid black;
+        }
 
-canvas.width = 800;
-canvas.height = 600;
+        #player {
+            position: absolute;
+            width: 20px;
+            height: 40px;
+            background: blue;
+            top: 760px;
+            left: 190px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="player"></div>
+    </div>
+    <script>
+        document.addEventListener('keydown', movePlayer);
 
-const player = {
-    x: 100,
-    y: 400,
-    width: 40,
-    height: 80,
-    velocityY: 0,
-    velocityX: 0,
-    jumping: false,
-    color: 'blue',
-};
+        function movePlayer(event) {
+            const player = document.getElementById('player');
+            const game = document.getElementById('game');
+            const playerPos = player.getBoundingClientRect();
+            const gamePos = game.getBoundingClientRect();
 
-const ball = {
-    x: 400,
-    y: 200,
-    radius: 15,
-    velocityX: 0,
-    velocityY: 0,
-    color: 'brown',
-};
+            if (event.key === 'ArrowUp' && playerPos.top > gamePos.top) {
+                player.style.top = `${player.offsetTop - 20}px`;
+            } else if (event.key === 'ArrowDown' && playerPos.bottom < gamePos.bottom) {
+                player.style.top = `${player.offsetTop + 20}px`;
+            } else if (event.key === 'ArrowLeft' && playerPos.left > gamePos.left) {
+                player.style.left = `${player.offsetLeft - 20}px`;
+            } else if (event.key === 'ArrowRight' && playerPos.right < gamePos.right) {
+                player.style.left = `${player.offsetLeft + 20}px`;
+            }
 
-const gravity = 0.5;
-const jumpPower = -12;
-const playerSpeed = 4;
+            checkWinCondition(playerPos, gamePos);
+        }
 
-const keys = {};
+        function checkWinCondition(playerPos, gamePos) {
+            if (playerPos.top <= gamePos.top) {
+                alert("Touchdown! You win!");
+                resetGame();
+            }
+        }
 
-function drawPlayer() {
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-}
-
-function drawBall() {
-    ctx.fillStyle = ball.color;
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fill();
-}
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawPlayer();
-    drawBall();
-}
-
-function updatePhysics() {
-    player.velocityY += gravity;
-    player.y += player.velocityY;
-    player.x += player.velocityX;
-
-    ball.velocityY += gravity;
-    ball.y += ball.velocityY;
-    ball.x += ball.velocityX;
-
-    if (player.y + player.height > canvas.height) {
-        player.y = canvas.height - player.height;
-        player.velocityY = 0;
-        player.jumping = false;
-    }
-
-    if (ball.y + ball.radius > canvas.height) {
-        ball.y = canvas.height - ball.radius;
-        ball.velocityY *= -0.8;
-    }
-
-    if (
-        player.x < ball.x + ball.radius &&
-        player.x + player.width > ball.x - ball.radius &&
-        player.y < ball.y + ball.radius &&
-        player.y + player.height > ball.y - ball.radius
-    ) {
-        ball.velocityX = (ball.x - (player.x + player.width / 2)) * 0.2;
-        ball.velocityY = -10;
-    }
-}
-
-function gameLoop() {
-    updatePhysics();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-document.addEventListener('keydown', event => {
-    keys[event.key] = true;
-    if (event.key === 'ArrowUp' && !player.jumping) {
-        player.velocityY = jumpPower;
-        player.jumping = true;
-    }
-    if (event.key === 'ArrowLeft') {
-        player.velocityX = -playerSpeed;
-    }
-    if (event.key === 'ArrowRight') {
-        player.velocityX = playerSpeed;
-    }
-});
-
-document.addEventListener('keyup', event => {
-    keys[event.key] = false;
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-        player.velocityX = 0;
-    }
-});
-
-gameLoop();
+        function resetGame() {
+            const player = document.getElementById('player');
+            player.style.top = '760px';
+            player.style.left = '190px';
+        }
+    </script>
+</body>
+</html>
