@@ -1,247 +1,163 @@
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-document.body.appendChild(canvas);
+// Create game container
+const gameContainer = document.createElement('div');
+gameContainer.id = 'game';
+gameContainer.style.position = 'relative';
+gameContainer.style.width = '800px';
+gameContainer.style.height = '600px';
+gameContainer.style.background = 'lightblue';
+gameContainer.style.border = '2px solid black';
+document.body.appendChild(gameContainer);
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// Create player
+const player = document.createElement('div');
+player.id = 'player';
+player.style.position = 'absolute';
+player.style.width = '40px';
+player.style.height = '40px';
+player.style.background = 'red';
+player.style.bottom = '0px';
+player.style.left = '0px';
+gameContainer.appendChild(player);
 
-const player = {
-    x: 50,
-    y: canvas.height - 50,
-    width: 20,
-    height: 40,
-    velocityY: 0,
-    jumping: false,
-    speed: 5,
-};
+// Create platforms
+const platforms = [
+    { width: 200, height: 20, top: 500, left: 100 },
+    { width: 200, height: 20, top: 400, left: 400 },
+    { width: 200, height: 20, top: 300, left: 150 },
+    { width: 200, height: 20, top: 200, left: 600 }
+];
 
-const platforms = [];
-let platformSpawnX = canvas.width;
-const platformHeight = 20;
-const platformWidth = 100;
-const platformGap = 200;
+platforms.forEach(platform => {
+    const platformElement = document.createElement('div');
+    platformElement.style.position = 'absolute';
+    platformElement.style.width = `${platform.width}px`;
+    platformElement.style.height = `${platform.height}px`;
+    platformElement.style.background = 'green';
+    platformElement.style.top = `${platform.top}px`;
+    platformElement.style.left = `${platform.left}px`;
+    gameContainer.appendChild(platformElement);
+});
 
-let cameraX = 0;
-const gravity = 0.5;
-const jumpPower = -12;
+// Create an obstacle
+const obstacle = document.createElement('div');
+obstacle.id = 'obstacle';
+obstacle.style.position = 'absolute';
+obstacle.style.width = '40px';
+obstacle.style.height = '40px';
+obstacle.style.background = 'black';
+obstacle.style.top = '460px';
+obstacle.style.left = '500px';
+gameContainer.appendChild(obstacle);
 
-function generatePlatform() {
-    platforms.push({
-        x: platformSpawnX,
-        y: canvas.height - Math.random() * 200 - platformHeight,
-        width: platformWidth,
-        height: platformHeight,
-    });
-    platformSpawnX += platformWidth + platformGap + Math.random() * 200;
+let isJumping = false;
+let jumpHeight = 0;
+let gravity = 2;
+let playerSpeed = 5;
+
+document.addEventListener('keydown', handleKeyPress);
+
+function handleKeyPress(event) {
+    if (event.key === 'ArrowLeft') {
+        movePlayer(-playerSpeed, 0);
+    } else if (event.key === 'ArrowRight') {
+        movePlayer(playerSpeed, 0);
+    } else if (event.key === 'ArrowUp' && !isJumping) {
+        jump();
+    }
 }
 
-function update() {
-    // Generate platforms if needed
-    while (platformSpawnX - cameraX < canvas.width * 2) {
-        generatePlatform();
+function movePlayer(deltaX, deltaY) {
+    const playerPos = player.getBoundingClientRect();
+    const gamePos = gameContainer.getBoundingClientRect();
+
+    if (playerPos.left + deltaX >= gamePos.left && playerPos.right + deltaX <= gamePos.right) {
+        player.style.left = `${player.offsetLeft + deltaX}px`;
+    }
+    if (playerPos.top + deltaY >= gamePos.top && playerPos.bottom + deltaY <= gamePos.bottom) {
+        player.style.top = `${player.offsetTop + deltaY}px`;
     }
 
-    // Player movement
-    if (keys['ArrowLeft']) player.x -= player.speed;
-    if (keys['ArrowRight']) player.x += player.speed;
+    checkObstacleCollision();
+}
 
-    player.velocityY += gravity;
-    player.y += player.velocityY;
-
-    // Platform collision
-    let onPlatform = false;
-    platforms.forEach(platform => {
-        if (
-            player.x < platform.x + platform.width &&
-            player.x + player.width > platform.x &&
-            player.y + player.height > platform.y &&
-            player.y < platform.y + platform.height
-        ) {
-            if (player.velocityY > 0 && player.y + player.height <= platform.y + 10) {
-                player.y = platform.y - player.height;
-                player.velocityY = 0;
-                player.jumping = false;
-                onPlatform = true;
-            } else if (player.velocityY < 0 && player.y >= platform.y + platform.height - 10) {
-                player.velocityY = 0;
-                player.y = platform.y + platform.height;
-            }
+function jump() {
+    isJumping = true;
+    jumpHeight = 15;
+    let jumpInterval = setInterval(() => {
+        if (jumpHeight > 0) {
+            player.style.bottom = `${parseInt(player.style.bottom) + jumpHeight}px`;
+            jumpHeight -= gravity;
+        } else {
+            clearInterval(jumpInterval);
+            fall();
         }
-    });
+    }, 50);
+}
 
-    if (!onPlatform && player.y + player.height >= canvas.height) {
-        player.y = canvas.height - player.height;
-        player.velocityY = 0;
-        player.jumping = false;
-    }
+function fall() {
+    let fallInterval = setInterval(() => {
+        const playerPos = player.getBoundingClientRect();
+        const gamePos = gameContainer.getBoundingClientRect();
+        const onPlatform = checkPlatformCollision(playerPos);
 
-    // Camera follow
-    cameraX = player.x - canvas.width / 4;
-
-    // Remove off-screen platforms
-    for (let i = platforms.length - 1; i >= 0; i--) {
-        if (platforms[i].x + platforms[i].width < cameraX - 100) {
-            platforms.splice(i, 1);
+        if (playerPos.bottom < gamePos.bottom && !onPlatform) {
+            player.style.bottom = `${parseInt(player.style.bottom) - gravity}px`;
+        } else {
+            clearInterval(fallInterval);
+            isJumping = false;
         }
-    }
-
-    draw();
-    requestAnimationFrame(update);
+    }, 50);
 }
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function checkPlatformCollision(playerPos) {
+    return platforms.some(platform => {
+        const platformPos = {
+            top: platform.top,
+            bottom: platform.top + platform.height,
+            left: platform.left,
+            right: platform.left + platform.width
+        };
 
-    // Draw platforms
-    platforms.forEach(platform => {
-        ctx.fillStyle = 'gray';
-        ctx.fillRect(platform.x - cameraX, platform.y, platform.width, platform.height);
+        return (
+            playerPos.bottom >= platformPos.top &&
+            playerPos.bottom <= platformPos.bottom &&
+            playerPos.right >= platformPos.left &&
+            playerPos.left <= platformPos.right
+        );
     });
-
-    // Draw player
-    ctx.fillStyle = 'red';
-    ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
 }
 
-const keys = {};
-document.addEventListener('keydown', event => {
-    keys[event.key] = true;
-    if (event.key === 'ArrowUp' && !player.jumping) {
-        player.velocityY = jumpPower;
-        player.jumping = true;
+function checkObstacleCollision() {
+    const playerPos = player.getBoundingClientRect();
+    const obstaclePos = obstacle.getBoundingClientRect();
+
+    if (
+        playerPos.right > obstaclePos.left &&
+        playerPos.left < obstaclePos.right &&
+        playerPos.bottom > obstaclePos.top &&
+        playerPos.top < obstaclePos.bottom
+    ) {
+        alert("Game Over! You hit an obstacle.");
+        resetGame();
     }
-});
-
-document.addEventListener('keyup', event => {
-    keys[event.key] = false;
-});
-
-update();
-
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-document.body.appendChild(canvas);
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const player = {
-    x: 50,
-    y: canvas.height - 50,
-    width: 20,
-    height: 40,
-    velocityY: 0,
-    jumping: false,
-    speed: 5,
-};
-
-const platforms = [];
-let platformSpawnX = canvas.width;
-const platformHeight = 20;
-const platformWidth = 100;
-const platformGap = 200;
-
-let cameraX = 0;
-const gravity = 0.5;
-const jumpPower = -12;
-
-function generatePlatform() {
-    platforms.push({
-        x: platformSpawnX,
-        y: canvas.height - Math.random() * 200 - platformHeight,
-        width: platformWidth,
-        height: platformHeight,
-    });
-    platformSpawnX += platformWidth + platformGap + Math.random() * 200;
 }
 
-function update() {
-    // Generate platforms if needed
-    while (platformSpawnX - cameraX < canvas.width * 2) {
-        generatePlatform();
-    }
-
-    // Player movement
-    if (keys['ArrowLeft']) player.x -= player.speed;
-    if (keys['ArrowRight']) player.x += player.speed;
-
-    player.velocityY += gravity;
-    player.y += player.velocityY;
-
-    // Platform collision
-    let onPlatform = false;
-    platforms.forEach(platform => {
-        if (
-            player.x < platform.x + platform.width &&
-            player.x + player.width > platform.x &&
-            player.y + player.height > platform.y &&
-            player.y < platform.y + platform.height
-        ) {
-            if (player.velocityY > 0 && player.y + player.height <= platform.y + 10) {
-                player.y = platform.y - player.height;
-                player.velocityY = 0;
-                player.jumping = false;
-                onPlatform = true;
-            } else if (player.velocityY < 0 && player.y >= platform.y + platform.height - 10) {
-                player.velocityY = 0;
-                player.y = platform.y + platform.height;
-            }
-        }
-    });
-
-    if (!onPlatform && player.y + player.height >= canvas.height) {
-        player.y = canvas.height - player.height;
-        player.velocityY = 0;
-        player.jumping = false;
-    }
-
-    // Camera follow
-    cameraX = player.x - canvas.width / 4;
-
-    // Remove off-screen platforms
-    for (let i = platforms.length - 1; i >= 0; i--) {
-        if (platforms[i].x + platforms[i].width < cameraX - 100) {
-            platforms.splice(i, 1);
-        }
-    }
-
-    draw();
-    requestAnimationFrame(update);
+function resetGame() {
+    player.style.bottom = '0px';
+    player.style.left = '0px';
+    isJumping = false;
 }
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw platforms
-    platforms.forEach(platform => {
-        ctx.fillStyle = 'gray';
-        ctx.fillRect(platform.x - cameraX, platform.y, platform.width, platform.height);
-    });
-
-    // Draw player
-    ctx.fillStyle = 'red';
-    ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
-}
-
-const keys = {};
-document.addEventListener('keydown', event => {
-    keys[event.key] = true;
-    if (event.key === 'ArrowUp' && !player.jumping) {
-        player.velocityY = jumpPower;
-        player.jumping = true;
+// Styling (optional)
+const style = document.createElement('style');
+style.innerHTML = `
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #e0e0e0;
     }
-});
-
-document.addEventListener('keyup', event => {
-    keys[event.key] = false;
-});
-
-update();
-
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+`;
+document.head.appendChild(style);
