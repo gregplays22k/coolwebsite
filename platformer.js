@@ -53,6 +53,7 @@ let isJumping = false;
 let jumpHeight = 0;
 let gravity = 2;
 let playerSpeed = 5;
+let playerVerticalSpeed = 0; // Add vertical speed
 
 document.addEventListener('keydown', handleKeyPress);
 
@@ -73,40 +74,60 @@ function movePlayer(deltaX, deltaY) {
     if (playerPos.left + deltaX >= gamePos.left && playerPos.right + deltaX <= gamePos.right) {
         player.style.left = `${player.offsetLeft + deltaX}px`;
     }
-    if (playerPos.top + deltaY >= gamePos.top && playerPos.bottom + deltaY <= gamePos.bottom) {
-        player.style.top = `${player.offsetTop + deltaY}px`;
-    }
 
     checkObstacleCollision();
 }
 
 function jump() {
     isJumping = true;
-    jumpHeight = 15;
-    let jumpInterval = setInterval(() => {
-        if (jumpHeight > 0) {
-            player.style.bottom = `${parseInt(player.style.bottom) + jumpHeight}px`;
-            jumpHeight -= gravity;
-        } else {
-            clearInterval(jumpInterval);
-            fall();
-        }
-    }, 50);
+    playerVerticalSpeed = -20; // Initial upward velocity
+    updatePlayerPosition();
 }
 
-function fall() {
-    let fallInterval = setInterval(() => {
-        const playerPos = player.getBoundingClientRect();
-        const gamePos = gameContainer.getBoundingClientRect();
-        const onPlatform = checkPlatformCollision(playerPos);
+function updatePlayerPosition() {
+    const playerPos = player.getBoundingClientRect();
+    const gamePos = gameContainer.getBoundingClientRect();
+    const onPlatform = checkPlatformCollision(playerPos);
 
-        if (playerPos.bottom < gamePos.bottom && !onPlatform) {
-            player.style.bottom = `${parseInt(player.style.bottom) - gravity}px`;
-        } else {
-            clearInterval(fallInterval);
-            isJumping = false;
+    playerVerticalSpeed += gravity; // Apply gravity
+
+    let newBottom = parseInt(player.style.bottom) + playerVerticalSpeed;
+
+    if (newBottom < 0 && !onPlatform) {
+        newBottom = 0;
+        playerVerticalSpeed = 0;
+        isJumping = false;
+    }
+
+    if(onPlatform && playerVerticalSpeed > 0){
+        playerVerticalSpeed = 0;
+        isJumping = false;
+        const platformY = getPlatformY(playerPos);
+        newBottom = platformY;
+    }
+    player.style.bottom = `${newBottom}px`;
+
+    requestAnimationFrame(updatePlayerPosition);
+}
+
+function getPlatformY(playerPos){
+    for(let platform of platforms){
+        const platformPos = {
+            top: platform.top,
+            bottom: platform.top + platform.height,
+            left: platform.left,
+            right: platform.left + platform.width
+        };
+        if (
+            playerPos.bottom >= platformPos.top &&
+            playerPos.bottom <= platformPos.bottom &&
+            playerPos.right >= platformPos.left &&
+            playerPos.left <= platformPos.right
+        ){
+            return platform.top;
         }
-    }, 50);
+    }
+    return 0;
 }
 
 function checkPlatformCollision(playerPos) {
@@ -146,6 +167,7 @@ function resetGame() {
     player.style.bottom = '0px';
     player.style.left = '0px';
     isJumping = false;
+    playerVerticalSpeed = 0;
 }
 
 // Styling (optional)
@@ -161,3 +183,5 @@ style.innerHTML = `
     }
 `;
 document.head.appendChild(style);
+
+updatePlayerPosition(); // Start the game loop
