@@ -6,17 +6,35 @@
   body {
     margin: 0;
     overflow: hidden;
+    background-color: #87CEEB; /* Light blue background */
   }
   canvas {
     display: block;
+  }
+  #musicCredits {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 5px;
+    font-size: 10px;
+    border-radius: 5px;
   }
 </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
+  <div id="musicCredits">
+    Music: "8 Bit Adventure" by <a href="https://www.purple-planet.com" target="_blank">Purple Planet</a>
+  </div>
+  <audio id="gameMusic" loop>
+    <source src="https://www.purple-planet.com/sounds/8-bit-adventure.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const gameMusic = document.getElementById("gameMusic");
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -30,9 +48,6 @@
       isJumping: false,
       speed: 5,
       alive: true,
-      jumpsRemaining: 2,
-      jumpSquash: 1,
-      jumpStretch: 1,
     };
 
     let platforms = [
@@ -48,8 +63,6 @@
     const scrollSpeed = 3;
     let cameraX = 0;
     let cameraY = 0;
-    let score = 0;
-    let particles = [];
 
     function resetGame() {
       player = {
@@ -61,9 +74,6 @@
         isJumping: false,
         speed: 5,
         alive: true,
-        jumpsRemaining: 2,
-        jumpSquash: 1,
-        jumpStretch: 1,
       };
 
       platforms = [
@@ -74,18 +84,12 @@
       ];
       cameraX = 0;
       cameraY = 0;
-      score = 0;
-      particles = [];
     }
 
     function drawPlayer() {
-      if (player.alive) {
+      if(player.alive){
         ctx.fillStyle = "red";
-        ctx.save();
-        ctx.translate(player.x - cameraX + player.width / 2, player.y - cameraY + player.height / 2);
-        ctx.scale(player.jumpStretch, player.jumpSquash);
-        ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
-        ctx.restore();
+        ctx.fillRect(player.x - cameraX, player.y - cameraY, player.width, player.height);
       }
     }
 
@@ -93,44 +97,32 @@
       platforms.forEach((platform) => {
         ctx.fillStyle = platform.spike ? "darkred" : "black";
         ctx.fillRect(platform.x - cameraX, platform.y - cameraY, platform.width, platform.height);
-        if (platform.spike) {
-          ctx.fillStyle = "red";
-          ctx.beginPath();
-          ctx.moveTo(platform.x - cameraX, platform.y - cameraY);
-          ctx.lineTo(platform.x - cameraX + platform.width / 2, platform.y - cameraY - 10);
-          ctx.lineTo(platform.x - cameraX + platform.width, platform.y - cameraY);
-          ctx.fill();
-        }
-      });
-    }
-
-    function drawParticles() {
-      particles.forEach((particle, index) => {
-        particle.y += particle.velocityY;
-        particle.x += particle.velocityX;
-        particle.alpha -= 0.05;
-
-        ctx.fillStyle = `rgba(255, 255, 0, ${particle.alpha})`;
-        ctx.fillRect(particle.x - cameraX, particle.y - cameraY, 3, 3);
-        if (particle.alpha <= 0) {
-          particles.splice(index, 1);
+        if(platform.spike){
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.moveTo(platform.x - cameraX, platform.y - cameraY);
+            ctx.lineTo(platform.x - cameraX+ platform.width/2, platform.y - cameraY - 10);
+            ctx.lineTo(platform.x - cameraX + platform.width, platform.y- cameraY);
+            ctx.fill();
         }
       });
     }
 
     function update() {
-      if (!player.alive) {
-        resetGame();
-        return;
-      }
+        if(!player.alive){
+            resetGame();
+            return;
+        }
       player.velocityY += gravity;
       player.y += player.velocityY;
 
       if (keys["ArrowRight"]) {
         player.x += player.speed;
+        cameraX += player.speed;
       }
       if (keys["ArrowLeft"]) {
         player.x -= player.speed;
+        cameraX -= player.speed;
       }
 
       let grounded = false;
@@ -146,14 +138,7 @@
             player.velocityY = 0;
             player.isJumping = false;
             grounded = true;
-            player.jumpsRemaining = 2;
-            player.jumpSquash = 1;
-            player.jumpStretch = 1;
-            if (platform.spike) { player.alive = false; }
-          } else if (player.velocityY < 0) {
-            player.y = platform.y + platform.height;
-            player.velocityY = 0;
-            if (platform.spike) { player.alive = false; }
+            if(platform.spike){player.alive = false;}
           }
         }
       });
@@ -172,8 +157,8 @@
         const lastPlatform = platforms[platforms.length - 1];
         const newPlatformWidth = Math.floor(Math.random() * 150) + 50;
         const newPlatformHeight = 20;
-        const newPlatformY = Math.random() > .5 ? canvas.height - Math.floor(Math.random() * 150) - newPlatformHeight : Math.floor(Math.random() * canvas.height / 2);
-        const newPlatformX = lastPlatform.x + lastPlatform.width + Math.floor(Math.random() * 300) + 100;
+        const newPlatformY = Math.random() > .5 ? canvas.height - Math.floor(Math.random() * 150) - newPlatformHeight : Math.floor(Math.random() * canvas.height/2);
+        const newPlatformX = lastPlatform.x + lastPlatform.width + Math.floor(Math.random() * 200) + 100;
         const spikeChance = Math.random() < .2;
 
         platforms.push({ x: newPlatformX, y: newPlatformY, width: newPlatformWidth, height: newPlatformHeight, spike: spikeChance });
@@ -186,24 +171,46 @@
         player.x = cameraX + canvas.width - player.width;
       }
 
-      cameraY = player.y - canvas.height / 2;
+      cameraY = player.y - canvas.height/2;
 
-      if (cameraY < 0) { cameraY = 0; }
-      if (player.y + player.height > canvas.height + cameraY) {
-        player.alive = false;
+      if(cameraY < 0){cameraY=0;}
+      if(player.y + player.height > canvas.height + cameraY){
+          player.alive=false;
       }
-      score += scrollSpeed / 10;
-      score = Math.floor(score);
     }
 
     function render() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawPlatforms();
       drawPlayer();
-      drawParticles();
-      ctx.fillStyle = "white";
-      ctx.font = "20px Arial";
-      ctx.fillText("Score: " + score, 10, 30);
     }
 
     function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+    gameMusic.play();
+
+    document.addEventListener("keydown", (event) => {
+      keys[event.key] = true;
+      if (event.key === "ArrowUp" && !player.isJumping) {
+        player.velocityY = jumpStrength;
+        player.isJumping = true;
+      }
+      if (event.key === 'r') {
+        resetGame();
+      }
+    });
+
+    document.addEventListener("keyup", (event) => {
+      keys[event.key] = false;
+    });
+
+    window.addEventListener('resize', function () {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      platforms[0].width = canvas.width;
+      platforms[0].y = canvas.
