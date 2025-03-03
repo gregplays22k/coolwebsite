@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Infinite Platformer - Level Editor</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+  }
+  canvas {
+    display: block;
+  }
+  #editor {
+    width: 300px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+  #editor button, #editor select, #editor input {
+    margin-bottom: 5px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+</style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="editor">
+    <h2>Level Editor</h2>
+    <select id="platformType">
+      <option value="normal">Normal Platform</option>
+      <option value="spike">Spike Platform</option>
+    </select>
+    <input type="number" id="platformX" placeholder="X Position">
+    <input type="number" id="platformY" placeholder="Y Position">
+    <input type="number" id="platformWidth" placeholder="Width">
+    <input type="number" id="platformHeight" placeholder="Height">
+    <button id="addPlatform">Add Platform</button>
+    <button id="clearPlatforms">Clear Platforms</button>
+    <button id="playTest">Play Test</button>
+    <input type="file" id="musicFile" accept=".mp3, .wav">
+    <audio id="backgroundMusic" loop></audio>
+  </div>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const editor = document.getElementById("editor");
+    const platformTypeSelect = document.getElementById("platformType");
+    const platformXInput = document.getElementById("platformX");
+    const platformYInput = document.getElementById("platformY");
+    const platformWidthInput = document.getElementById("platformWidth");
+    const platformHeightInput = document.getElementById("platformHeight");
+    const addPlatformButton = document.getElementById("addPlatform");
+    const clearPlatformsButton = document.getElementById("clearPlatforms");
+    const playTestButton = document.getElementById("playTest");
+    const musicFileInput = document.getElementById("musicFile");
+    const backgroundMusic = document.getElementById("backgroundMusic");
+
+    canvas.width = window.innerWidth - 300;
+    canvas.height = window.innerHeight;
+
+    let player = {
+      x: 50,
+      y: canvas.height - 50,
+      width: 20,
+      height: 20,
+      velocityY: 0,
+      isJumping: false,
+      speed: 5,
+      alive: true,
+      jumpsRemaining: 2,
+      jumpSquash: 1,
+      jumpStretch: 1,
+    };
+
+    let platforms = [
+      { x: 0, y: canvas.height - 20, width: canvas.width, height: 20, spike: false }
+    ];
+
+    const gravity = 0.5;
+    const jumpStrength = -10;
+    const keys = {};
+    const scrollSpeed = 3;
+    let cameraX = 0;
+    let cameraY = 0;
+    let score = 0;
+    let particles = [];
+    let editorMode = true;
+
+    function resetGame() {
+      player = {
+        x: 50,
+        y: canvas.height - 50,
+        width: 20,
+        height: 20,
+        velocityY: 0,
+        isJumping: false,
+        speed: 5,
+        alive: true,
+        jumpsRemaining: 2,
+        jumpSquash: 1,
+        jumpStretch: 1,
+      };
+      cameraX = 0;
+      cameraY = 0;
+      score = 0;
+      particles = [];
+      editorMode = false;
+    }
+
+    function drawPlayer() {
+      if (player.alive) {
+        ctx.fillStyle = "red";
+        ctx.save();
+        ctx.translate(player.x - cameraX + player.width / 2, player.y - cameraY + player.height / 2);
+        ctx.scale(player.jumpStretch, player.jumpSquash);
+        ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+        ctx.restore();
+      }
+    }
+
+    function drawPlatforms() {
+      platforms.forEach((platform) => {
+        ctx.fillStyle = platform.spike ? "darkred" : "black";
+        ctx.fillRect(platform.x - cameraX, platform.y - cameraY, platform.width, platform.height);
+        if (platform.spike) {
+          ctx.fillStyle = "red";
+          ctx.beginPath();
+          ctx.moveTo(platform.x - cameraX, platform.y - cameraY);
+          ctx.lineTo(platform.x - cameraX + platform.width / 2, platform.y - cameraY - 10);
+          ctx.lineTo(platform.x - cameraX + platform.width, platform.y - cameraY);
+          ctx.fill();
+        }
+      });
+    }
+
+    function drawParticles() {
+      particles.forEach((particle, index) => {
+        particle.y += particle.velocityY;
+        particle.x += particle.velocityX;
+        particle.alpha -= 0.05;
+
+        ctx.fillStyle = `rgba(255, 255, 0, ${particle.alpha})`;
+        ctx.fillRect(particle.x - cameraX, particle.y - cameraY, 3, 3);
+        if (particle.alpha <= 0) {
+          particles.splice(index, 1);
+        }
+      });
+    }
+
+    function update() {
+      if (editorMode) return;
+      if (!player.alive) {
+        resetGame();
+        return;
+      }
+      player.velocityY += gravity;
+      player.y += player.velocityY;
+
+      if (keys["ArrowRight"]) {
+        player.x += player.speed;
+      }
+      if (keys["ArrowLeft"]) {
+        player.x -= player.speed;
+      }
+
+      let grounded = false;
+      platforms.forEach((platform) => {
+        if (
+          player.x < platform.x + platform.width &&
+          player.x + player.width > platform.x &&
+          player.y < platform.y + platform.height &&
+          player.y + player.height > platform.y
+        ) {
+          if (player.velocityY > 0) {
+            player.y = platform.y - player.height;
+            player.velocityY = 0;
+            player.isJumping = false;
+            grounded = true;
+            player.jumpsRemaining = 2;
+            player.jumpSquash = 1;
+            player.jumpStretch = 1;
+            if (platform.spike) { player.alive = false; }
+          } else if (player.velocityY < 0) {
+            player.y = platform.y + platform.height;
+            player.velocityY = 0;
+            if (platform.spike) { player.alive = false; }
+          }
+        }
+      });
+
+      if (!grounded) {
+        player.isJumping = true;
+      }
+
+      platforms.forEach((platform) => {
+        platform.x -= scrollSpeed;
+      });
+
+      platforms = platforms.filter((platform) => platform.x + platform.width > cameraX);
+
+      if (platforms[platforms.length - 1].x + platforms[platforms.length - 1].width < cameraX + canvas.width) {
+        const lastPlatform = platforms[platforms.length - 1];
+        const newPlatformWidth = Math.floor(Math.random() * 150) + 50;
+        const newPlatformHeight = 20;
+        const newPlatformY = Math.random() > .5 ? canvas.height - Math.floor(Math.random() * 150) - newPlatformHeight : Math.floor(Math.random() * canvas.height / 2);
+        const newPlatformX = lastPlatform.x + lastPlatform.width + Math.floor(Math.random() * 300) + 100;
+        const spikeChance = Math.random() < .2;
+
+        platforms.push({ x: newPlatformX, y: newPlatformY, width: newPlatformWidth, height: newPlatformHeight, spike: spikeChance });
+      }
+
+      if (player.x < cameraX) {
