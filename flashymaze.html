@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dynamic Maze</title>
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  transition: background-color 1s ease;
+}
+
+#maze {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  border: 2px solid black;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+}
+
+.wall {
+  background-color: black;
+}
+</style>
+</head>
+<body>
+
+<div id="maze">
+  <div class="wall"></div><div class="wall"></div><div></div><div class="wall"></div><div class="wall"></div><div></div><div class="wall"></div><div></div><div class="wall"></div><div></div>
+  <div></div><div></div><div></div><div></div><div class="wall"></div><div></div><div class="wall"></div><div></div><div></div><div></div>
+  <div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div>
+  <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+  <div class="wall"></div><div></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div>
+  <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+  <div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div>
+  <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+  <div class="wall"></div><div></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div>
+  <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+</div>
+
+<script>
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+function changeBackgroundColor() {
+  document.body.style.backgroundColor = getRandomColor();
+}
+
+setInterval(changeBackgroundColor, 1000); // Change every 1 second
+
+const maze = document.getElementById('maze');
+
+function toggleMazeVisibility() {
+  if (maze.style.visibility === 'hidden' || maze.style.visibility === '') {
+    maze.style.visibility = 'visible';
+  } else {
+    maze.style.visibility = 'hidden';
+  }
+}
+
+setInterval(toggleMazeVisibility, 5000); // Toggle every 5 seconds
+
+// Initial visibility
+maze.style.visibility = 'visible';
+</script>
+
+</body>
+</html>
