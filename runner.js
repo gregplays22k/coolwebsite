@@ -1,113 +1,118 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+(function() {
+  const gameContainer = document.getElementById('game-container');
+  const canvas = document.createElement('canvas');
+  canvas.id = 'runnerCanvas';
+  canvas.width = 800;
+  canvas.height = 400;
+  gameContainer.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+  let player = {
+    x: 50,
+    y: canvas.height - 50,
+    width: 30,
+    height: 50,
+    velocityY: 0,
+    gravity: 1,
+    isJumping: false,
+  };
 
-class Player {
-    constructor() {
-        this.width = 50;
-        this.height = 50;
-        this.x = 50;
-        this.y = canvas.height / 2 - this.height / 2;
-        this.yVelocity = 0;
-        this.jumpStrength = 15;
-        this.gravity = 0.5;
-    }
+  let obstacles =;
+  let score = 0;
+  let gameSpeed = 5;
+  let obstacleSpawnRate = 150; // Adjust for difficulty
+  let obstacleSpawnTimer = 0;
+  let gameOver = false;
 
-    draw() {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
+  function drawPlayer() {
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+  }
 
-    update() {
-        this.y += this.yVelocity;
-        this.yVelocity += this.gravity;
+  function drawObstacle(obstacle) {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+  }
 
-        if (this.y + this.height > canvas.height) {
-            this.y = canvas.height - this.height;
-            this.yVelocity = 0;
-        }
-    }
+  function drawScore() {
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    ctx.fillText('Score: ' + score, 10, 30);
+  }
 
-    jump() {
-        if (this.y + this.height === canvas.height) {
-            this.yVelocity = -this.jumpStrength;
-        }
-    }
-}
-
-class Obstacle {
-    constructor(x, width, height, speed) {
-        this.x = x;
-        this.width = width;
-        this.height = height;
-        this.speed = speed;
-        this.y = canvas.height - this.height;
-    }
-
-    draw() {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
-
-    update() {
-        this.x -= this.speed;
-    }
-}
-
-const player = new Player();
-const obstacles = [];
-let obstacleTimer = 0;
-let gameOver = false;
-
-function spawnObstacle() {
-    const width = Math.random() * 50 + 50;
-    const height = Math.random() * 50 + 50;
-    const speed = 5;
-    const obstacle = new Obstacle(canvas.width, width, height, speed);
-    obstacles.push(obstacle);
-}
-
-function animate() {
-    if (gameOver) return;
+  function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    player.draw();
-    player.update();
+  }
 
-    if (obstacleTimer === 0) {
-        spawnObstacle();
-        obstacleTimer = 100; // spawn new obstacle every 100 frames
-    } else {
-        obstacleTimer--;
+  function updatePlayer() {
+    player.y += player.velocityY;
+    player.velocityY += player.gravity;
+
+    if (player.y > canvas.height - player.height) {
+      player.y = canvas.height - player.height;
+      player.velocityY = 0;
+      player.isJumping = false;
     }
+  }
 
+  function updateObstacles() {
     obstacles.forEach((obstacle, index) => {
-        obstacle.draw();
-        obstacle.update();
+      obstacle.x -= gameSpeed;
+      if (obstacle.x + obstacle.width < 0) {
+        obstacles.splice(index, 1);
+        score++;
+      }
 
-        if (obstacle.x + obstacle.width < 0) {
-            obstacles.splice(index, 1); // remove off-screen obstacles
-        }
-
-        // collision detection
-        if (player.x < obstacle.x + obstacle.width &&
-            player.x + player.width > obstacle.x &&
-            player.y < obstacle.y + obstacle.height &&
-            player.y + player.height > obstacle.y) {
-            gameOver = true;
-            alert('Game Over!');
-        }
+      // Collision detection
+      if (
+        player.x < obstacle.x + obstacle.width &&
+        player.x + player.width > obstacle.x &&
+        player.y < obstacle.y + obstacle.height &&
+        player.y + player.height > obstacle.y
+      ) {
+        gameOver = true;
+      }
     });
+  }
 
-    requestAnimationFrame(animate);
-}
+  function spawnObstacle() {
+    let obstacleWidth = Math.random() * 40 + 20;
+    let obstacleHeight = Math.random() * 60 + 30;
+    let obstacleY = canvas.height - obstacleHeight;
 
-window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-        player.jump();
+    obstacles.push({
+      x: canvas.width,
+      y: obstacleY,
+      width: obstacleWidth,
+      height: obstacleHeight,
+    });
+  }
+
+  function main() {
+    if (gameOver) {
+      alert('Game Over! Score: ' + score);
+      return;
     }
-});
 
-animate();
+    clearCanvas();
+    drawPlayer();
+    drawScore();
+
+    updatePlayer();
+    updateObstacles();
+
+    obstacleSpawnTimer++;
+    if (obstacleSpawnTimer > obstacleSpawnRate) {
+      spawnObstacle();
+      obstacleSpawnTimer = 0;
+    }
+
+    obstacles.forEach(drawObstacle);
+
+    requestAnimationFrame(main);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !player.isJumping) {
+      player.velocityY = -20; // Adjust jump height
+      player.isJumping =
