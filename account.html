@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloud-Based Account Management</title>
+    <style>
+        body { font-family: sans-serif; }
+        #account-form, #member-area, #password-manager, #email-maker { border: 1px solid #ccc; padding: 20px; margin: 20px; width: 300px; }
+        #member-area, #password-manager, #email-maker { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="account-form">
+    <h2>Create Account</h2>
+    <input type="email" id="email" placeholder="Email" required><br><br>
+    <input type="password" id="password" placeholder="Password" required><br><br>
+    <button onclick="createAccount()">Create Account & Verify</button>
+    <p id="message"></p>
+</div>
+
+<div id="member-area">
+    <h2>Member Area</h2>
+    <p>Welcome, <span id="member-email"></span>!</p>
+    <p>Custom Message: <input type="text" id="customMessage"><button onclick="displayCustomMessage()">Show</button><p id="displayedMessage"></p></p>
+    <button onclick="logout()">Logout</button>
+    <button onclick="showPasswordManager()">Password Manager</button>
+    <button onclick="showEmailMaker()">Email Maker</button>
+</div>
+
+<div id="password-manager">
+    <h2>Password Manager</h2>
+    <div id="password-entries"></div>
+    <input type="text" id="siteName" placeholder="Site Name">
+    <input type="password" id="sitePassword" placeholder="Password">
+    <button onclick="addPassword()">Add Password</button>
+    <button onclick="hidePasswordManager()">Close</button>
+</div>
+
+<div id="email-maker">
+    <h2>Email Maker</h2>
+    <input type="text" id="emailSubject" placeholder="Subject"><br><br>
+    <textarea id="emailBody" placeholder="Body" rows="4" cols="30"></textarea><br><br>
+    <button onclick="sendEmail()">Send Email (Simulated)</button>
+    <p id="emailResult"></p>
+    <button onclick="hideEmailMaker()">Close</button>
+</div>
+
+<script>
+const cloudUrl = 'YOUR_CLOUD_FUNCTION_URL'; // Replace with your cloud function URL.
+
+async function fetchCloudData(endpoint, method = 'GET', body = null) {
+    const options = {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : null
+    };
+    try {
+        const response = await fetch(`${cloudUrl}/${endpoint}`, options);
+        return response.json();
+    } catch (error) {
+        console.error("Network Error:", error);
+        return { success: false, message: "Network error. Please try again." };
+    }
+}
+
+async function createAccount() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const message = document.getElementById('message');
+
+    try {
+        const result = await fetchCloudData('createAccount', 'POST', { email, password });
+        if (result && result.success) {
+            message.textContent = "Verification email sent (simulated).";
+            localStorage.setItem('loggedInEmail', email);
+            showMemberArea(email);
+        } else if (result && result.message) {
+            message.textContent = result.message;
+        } else {
+            message.textContent = "Error creating account.";
+        }
+    } catch (error) {
+        message.textContent = "Error creating account.";
+        console.error(error);
+    }
+}
+
+async function logout() {
+    localStorage.removeItem('loggedInEmail');
+    document.getElementById('member-area').style.display = 'none';
+    document.getElementById('account-form').style.display = 'block';
+}
+
+function displayCustomMessage() {
+    const customMessage = document.getElementById('customMessage').value;
+    document.getElementById('displayedMessage').textContent = customMessage;
+}
+
+function showMemberArea(email) {
+    document.getElementById('account-form').style.display = 'none';
+    document.getElementById('member-area').style.display = 'block';
+    document.getElementById('member-email').textContent = email;
+}
+
+function showPasswordManager() {
+    document.getElementById('password-manager').style.display = 'block';
+    loadPasswordEntries();
+}
+
+function hidePasswordManager() {
+    document.getElementById('password-manager').style.display = 'none';
+}
+
+async function addPassword() {
+    const siteName = document.getElementById('siteName').value;
+    const sitePassword = document.getElementById('sitePassword').value;
+    const email = localStorage.getItem('loggedInEmail');
+
+    if (!siteName || !sitePassword || !email) return;
+
+    try {
+        await fetchCloudData('addPassword', 'POST', { email, siteName, sitePassword });
+        loadPasswordEntries();
+        document.getElementById('siteName').value = '';
+        document.getElementById('sitePassword').value = '';
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function loadPasswordEntries() {
+    const entriesDiv = document.getElementById('password-entries');
+    entriesDiv.innerHTML = '';
+    const email = localStorage.getItem('loggedInEmail');
+
+    if (!email) return;
+
+    try {
+        const result = await fetchCloudData('getPasswordEntries', 'POST', { email });
+        if (result && result.entries) {
+            for (const site in result.entries) {
+                const entryDiv = document.createElement('div');
+                entryDiv.textContent = `${site}: ${result.entries[site]}`;
+                entriesDiv.appendChild(entryDiv);
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function showEmailMaker() {
+    document.getElementById('email-maker').style.display = 'block';
+}
+
+function hideEmailMaker() {
+    document.getElementById('email-maker').style.display = 'none';
+}
+
+function sendEmail() {
+    const subject = document.getElementById('emailSubject').value;
+    const body = document.getElementById('emailBody').value;
+    const resultDisplay = document.getElementById('emailResult');
+    //Simulate sending email, replace with real backend functionality.
+    resultDisplay.textContent = `Email sent (simulated): Subject: ${subject}, Body: ${body}`;
+}
+
+// Check for logged-in user on page load
+const loggedInEmail = localStorage.getItem('loggedInEmail');
+if (loggedInEmail) {
+    showMemberArea(loggedInEmail);
+    loadPasswordEntries();
+}
+
+</script>
+
+</body>
+</html>
