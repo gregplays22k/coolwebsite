@@ -4,74 +4,123 @@
 <title>Dynamic Maze</title>
 <style>
 body {
-  margin: 0;
-  overflow: hidden;
-  transition: background-color 1s ease;
+    margin: 0;
+    overflow: hidden;
+    transition: background-color 1s ease;
 }
 
 #maze {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 300px;
-  height: 300px;
-  border: 2px solid black;
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(10, 1fr);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    border: 2px solid black;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
 }
 
 .wall {
-  background-color: black;
+    background-color: black;
+}
+
+.player {
+    background-color: blue;
+}
+
+.start {
+    background-color: green;
+}
+
+.end {
+    background-color: red;
 }
 </style>
 </head>
 <body>
 
-<div id="maze">
-  <div class="wall"></div><div class="wall"></div><div></div><div class="wall"></div><div class="wall"></div><div></div><div class="wall"></div><div></div><div class="wall"></div><div></div>
-  <div></div><div></div><div></div><div></div><div class="wall"></div><div></div><div class="wall"></div><div></div><div></div><div></div>
-  <div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div>
-  <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-  <div class="wall"></div><div></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div>
-  <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-  <div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div>
-  <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-  <div class="wall"></div><div></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div><div class="wall"></div>
-  <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-</div>
+<div id="maze"></div>
 
 <script>
+const maze = document.getElementById('maze');
+const gridSize = 10;
+let playerPosition = { row: 0, col: 0 };
+let endPosition = { row: gridSize - 1, col: gridSize - 1 };
+
 function getRandomColor() {
-  const letters = '0123456789ABCDEF';
-  let color = '#';
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
 }
 
 function changeBackgroundColor() {
-  document.body.style.backgroundColor = getRandomColor();
+    document.body.style.backgroundColor = getRandomColor();
 }
 
-setInterval(changeBackgroundColor, 1000); // Change every 1 second
+setInterval(changeBackgroundColor, 1000);
 
-const maze = document.getElementById('maze');
-
-function toggleMazeVisibility() {
-  if (maze.style.visibility === 'hidden' || maze.style.visibility === '') {
-    maze.style.visibility = 'visible';
-  } else {
-    maze.style.visibility = 'hidden';
-  }
+function generateMaze() {
+    maze.innerHTML = '';
+    for (let i = 0; i < gridSize * gridSize; i++) {
+        const cell = document.createElement('div');
+        if (Math.random() < 0.3) {
+            cell.classList.add('wall');
+        }
+        maze.appendChild(cell);
+    }
+    playerPosition = { row: 0, col: 0 };
+    endPosition = { row: gridSize - 1, col: gridSize - 1 };
+    renderMaze();
 }
 
-setInterval(toggleMazeVisibility, 5000); // Toggle every 5 seconds
+function renderMaze() {
+    const cells = maze.children;
+    for (let i = 0; i < cells.length; i++) {
+        cells[i].classList.remove('player', 'start', 'end');
+    }
 
-// Initial visibility
-maze.style.visibility = 'visible';
+    cells[playerPosition.row * gridSize + playerPosition.col].classList.add('player');
+    cells[0].classList.add('start');
+    cells[endPosition.row * gridSize + endPosition.col].classList.add('end');
+}
+
+function movePlayer(direction) {
+    let newRow = playerPosition.row;
+    let newCol = playerPosition.col;
+
+    if (direction === 'up' && playerPosition.row > 0) newRow--;
+    if (direction === 'down' && playerPosition.row < gridSize - 1) newRow++;
+    if (direction === 'left' && playerPosition.col > 0) newCol--;
+    if (direction === 'right' && playerPosition.col < gridSize - 1) newCol++;
+
+    const newCell = maze.children[newRow * gridSize + newCol];
+
+    if (!newCell.classList.contains('wall')) {
+        playerPosition.row = newRow;
+        playerPosition.col = newCol;
+        renderMaze();
+    }
+
+    if (playerPosition.row === endPosition.row && playerPosition.col === endPosition.col) {
+        generateMaze();
+    }
+}
+
+document.addEventListener('keydown', (event) => {
+    switch (event.key) {
+        case 'ArrowUp': movePlayer('up'); break;
+        case 'ArrowDown': movePlayer('down'); break;
+        case 'ArrowLeft': movePlayer('left'); break;
+        case 'ArrowRight': movePlayer('right'); break;
+    }
+});
+
+generateMaze();
 </script>
 
 </body>
