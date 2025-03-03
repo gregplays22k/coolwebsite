@@ -29,23 +29,22 @@
       velocityY: 0,
       isJumping: false,
       speed: 5,
-      animationFrame: 0,
-      animationSpeed: 5, // Adjust for animation speed
-      direction: 1 // 1 for right, -1 for left
+      alive: true,
     };
 
     let platforms = [
-      { x: 0, y: canvas.height - 20, width: canvas.width, height: 20 },
-      { x: 200, y: canvas.height - 100, width: 100, height: 20 },
-      { x: 500, y: canvas.height - 150, width: 150, height: 20 },
-      { x: 800, y: canvas.height - 75, width: 80, height: 20 }
+      { x: 0, y: canvas.height - 20, width: canvas.width, height: 20, spike: false },
+      { x: 200, y: canvas.height - 100, width: 100, height: 20, spike: false },
+      { x: 500, y: canvas.height - 150, width: 150, height: 20, spike: false },
+      { x: 800, y: canvas.height - 75, width: 80, height: 20, spike: false }
     ];
 
     const gravity = 0.5;
     const jumpStrength = -10;
     const keys = {};
     const scrollSpeed = 3;
-    let cameraX = 0; // Camera's x position
+    let cameraX = 0;
+    let cameraY = 0;
 
     function resetGame() {
       player = {
@@ -56,57 +55,56 @@
         velocityY: 0,
         isJumping: false,
         speed: 5,
-        animationFrame: 0,
-        animationSpeed: 5,
-        direction: 1
+        alive: true,
       };
 
       platforms = [
-        { x: 0, y: canvas.height - 20, width: canvas.width, height: 20 },
-        { x: 200, y: canvas.height - 100, width: 100, height: 20 },
-        { x: 500, y: canvas.height - 150, width: 150, height: 20 },
-        { x: 800, y: canvas.height - 75, width: 80, height: 20 }
+        { x: 0, y: canvas.height - 20, width: canvas.width, height: 20, spike: false },
+        { x: 200, y: canvas.height - 100, width: 100, height: 20, spike: false },
+        { x: 500, y: canvas.height - 150, width: 150, height: 20, spike: false },
+        { x: 800, y: canvas.height - 75, width: 80, height: 20, spike: false }
       ];
       cameraX = 0;
+      cameraY = 0;
     }
 
     function drawPlayer() {
-      ctx.fillStyle = "red";
-
-      // Simple animation: change width slightly
-      let animatedWidth = player.width;
-      if (keys["ArrowRight"] || keys["ArrowLeft"]) {
-        player.animationFrame++;
-        if (player.animationFrame % player.animationSpeed < player.animationSpeed / 2) {
-          animatedWidth = player.width * 1.1; // Slightly wider
-        } else {
-          animatedWidth = player.width;
-        }
-      } else {
-        player.animationFrame = 0;
+      if(player.alive){
+        ctx.fillStyle = "red";
+        ctx.fillRect(player.x - cameraX, player.y - cameraY, player.width, player.height);
       }
-
-      ctx.fillRect(player.x - cameraX, player.y, animatedWidth, player.height);
     }
 
     function drawPlatforms() {
-      ctx.fillStyle = "black";
       platforms.forEach((platform) => {
-        ctx.fillRect(platform.x - cameraX, platform.y, platform.width, platform.height);
+        ctx.fillStyle = platform.spike ? "darkred" : "black";
+        ctx.fillRect(platform.x - cameraX, platform.y - cameraY, platform.width, platform.height);
+        if(platform.spike){
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.moveTo(platform.x - cameraX, platform.y - cameraY);
+            ctx.lineTo(platform.x - cameraX+ platform.width/2, platform.y - cameraY - 10);
+            ctx.lineTo(platform.x - cameraX + platform.width, platform.y- cameraY);
+            ctx.fill();
+        }
       });
     }
 
     function update() {
+        if(!player.alive){
+            resetGame();
+            return;
+        }
       player.velocityY += gravity;
       player.y += player.velocityY;
 
       if (keys["ArrowRight"]) {
         player.x += player.speed;
-        player.direction = 1;
+        cameraX += player.speed;
       }
       if (keys["ArrowLeft"]) {
         player.x -= player.speed;
-        player.direction = -1;
+        cameraX -= player.speed;
       }
 
       let grounded = false;
@@ -122,9 +120,11 @@
             player.velocityY = 0;
             player.isJumping = false;
             grounded = true;
+            if(platform.spike){player.alive = false;}
           } else if (player.velocityY < 0) {
             player.y = platform.y + platform.height;
             player.velocityY = 0;
+            if(platform.spike){player.alive = false;}
           }
         }
       });
@@ -132,10 +132,6 @@
       if (!grounded) {
         player.isJumping = true;
       }
-
-      // Camera follow
-      cameraX = player.x - canvas.width / 2;
-      if (cameraX < 0) cameraX = 0;
 
       platforms.forEach((platform) => {
         platform.x -= scrollSpeed;
@@ -147,14 +143,26 @@
         const lastPlatform = platforms[platforms.length - 1];
         const newPlatformWidth = Math.floor(Math.random() * 150) + 50;
         const newPlatformHeight = 20;
-        const newPlatformY = canvas.height - Math.floor(Math.random() * 150) - newPlatformHeight;
+        const newPlatformY = Math.random() > .5 ? canvas.height - Math.floor(Math.random() * 150) - newPlatformHeight : Math.floor(Math.random() * canvas.height/2);
         const newPlatformX = lastPlatform.x + lastPlatform.width + Math.floor(Math.random() * 200) + 100;
+        const spikeChance = Math.random() < .2;
 
-        platforms.push({ x: newPlatformX, y: newPlatformY, width: newPlatformWidth, height: newPlatformHeight });
+        platforms.push({ x: newPlatformX, y: newPlatformY, width: newPlatformWidth, height: newPlatformHeight, spike: spikeChance });
       }
 
-      if (player.x < 0) { player.x = 0; }
-      if (player.x + player.width > cameraX + canvas.width) { player.x = cameraX + canvas.width - player.width; }
+      if (player.x < cameraX) {
+        player.x = cameraX;
+      }
+      if (player.x + player.width > cameraX + canvas.width) {
+        player.x = cameraX + canvas.width - player.width;
+      }
+
+      cameraY = player.y - canvas.height/2;
+
+      if(cameraY < 0){cameraY=0;}
+      if(player.y + player.height > canvas.height + cameraY){
+          player.alive=false;
+      }
     }
 
     function render() {
