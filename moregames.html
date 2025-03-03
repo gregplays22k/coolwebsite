@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>More Games!</title>
+<style>
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 20px;
+}
+.game-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px;
+    text-align: center;
+    width: 300px;
+}
+canvas {
+    border: 1px solid #000;
+}
+</style>
+</head>
+<body>
+
+<div class="game-container">
+    <h2>Simple Click Game</h2>
+    <p>Click the button!</p>
+    <button id="clickButton">Click Me!</button>
+    <p id="clickCount">Clicks: 0</p>
+    <script>
+        let clickCount = 0;
+        document.getElementById("clickButton").addEventListener("click", function() {
+            clickCount++;
+            document.getElementById("clickCount").textContent = "Clicks: " + clickCount;
+        });
+    </script>
+</div>
+
+<div class="game-container">
+    <h2>Number Guessing Game</h2>
+    <p>Guess a number between 1 and 10.</p>
+    <input type="number" id="guessInput">
+    <button id="guessButton">Guess</button>
+    <p id="guessResult"></p>
+    <script>
+        const randomNumber = Math.floor(Math.random() * 10) + 1;
+        document.getElementById("guessButton").addEventListener("click", function() {
+            const guess = parseInt(document.getElementById("guessInput").value);
+            if (guess === randomNumber) {
+                document.getElementById("guessResult").textContent = "You guessed it!";
+            } else if (guess < randomNumber) {
+                document.getElementById("guessResult").textContent = "Too low!";
+            } else {
+                document.getElementById("guessResult").textContent = "Too high!";
+            }
+        });
+    </script>
+</div>
+
+<div class="game-container">
+    <h2>Simple Drawing</h2>
+    <canvas id="drawingCanvas" width="200" height="100"></canvas>
+    <script>
+        const canvas = document.getElementById("drawingCanvas");
+        const ctx = canvas.getContext("2d");
+        let isDrawing = false;
+
+        canvas.addEventListener("mousedown", (e) => {
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            if (!isDrawing) return;
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener("mouseup", () => {
+            isDrawing = false;
+        });
+    </script>
+</div>
+
+<div class="game-container">
+    <h2>Text Scroller</h2>
+    <div id="scroller" style="overflow: hidden; white-space: nowrap; width: 250px;">
+        <span id="scrollingText">This is scrolling text!</span>
+    </div>
+    <script>
+        const scrollingText = document.getElementById("scrollingText");
+        let position = 250;
+        function scrollText() {
+            position--;
+            scrollingText.style.transform = `translateX(${position}px)`;
+            if (position < -scrollingText.offsetWidth) {
+                position = 250;
+            }
+            requestAnimationFrame(scrollText);
+        }
+        scrollText();
+    </script>
+</div>
+
+<div class="game-container">
+    <h2>Color Changer</h2>
+    <button id="colorButton">Change Color</button>
+    <script>
+        const colors = ["red", "blue", "green", "yellow", "purple"];
+        let colorIndex = 0;
+        document.getElementById("colorButton").addEventListener("click", function() {
+            document.body.style.backgroundColor = colors[colorIndex];
+            colorIndex = (colorIndex + 1) % colors.length;
+        });
+    </script>
+</div>
+
+<div class="game-container">
+    <h2>Simple Timer</h2>
+    <p id="timer">0</p>
+    <script>
+        let seconds = 0;
+        setInterval(function() {
+            seconds++;
+            document.getElementById("timer").textContent = seconds;
+        }, 1000);
+    </script>
+</div>
+
+<div class="game-container">
+    <h2>Basic Pong (Canvas)</h2>
+    <canvas id="pongCanvas" width="200" height="100"></canvas>
+    <script>
+      const pongCanvas = document.getElementById('pongCanvas');
+      const pongCtx = pongCanvas.getContext('2d');
+      let x = pongCanvas.width / 2;
+      let y = pongCanvas.height / 2;
+      let dx = 2;
+      let dy = 2;
+
+      function drawPong() {
+        pongCtx.clearRect(0, 0, pongCanvas.width, pongCanvas.height);
+        pongCtx.beginPath();
+        pongCtx.arc(x, y, 10, 0, Math.PI * 2);
+        pongCtx.fillStyle = '#0095DD';
+        pongCtx.fill();
+        pongCtx.closePath();
+
+        if (x + dx > pongCanvas.width - 10 || x + dx < 10) {
+          dx = -dx;
+        }
+        if (y + dy > pongCanvas.height - 10 || y + dy < 10) {
+          dy = -dy;
+        }
+
+        x += dx;
+        y += dy;
+        requestAnimationFrame(drawPong);
+      }
+      drawPong();
+    </script>
+</div>
+
+</body>
+</html>
