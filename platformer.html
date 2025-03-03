@@ -29,19 +29,23 @@
       velocityY: 0,
       isJumping: false,
       speed: 5,
+      animationFrame: 0,
+      animationSpeed: 5, // Adjust for animation speed
+      direction: 1 // 1 for right, -1 for left
     };
 
     let platforms = [
       { x: 0, y: canvas.height - 20, width: canvas.width, height: 20 },
       { x: 200, y: canvas.height - 100, width: 100, height: 20 },
       { x: 500, y: canvas.height - 150, width: 150, height: 20 },
-      {x: 800, y: canvas.height - 75, width: 80, height: 20}
+      { x: 800, y: canvas.height - 75, width: 80, height: 20 }
     ];
 
     const gravity = 0.5;
     const jumpStrength = -10;
     const keys = {};
     const scrollSpeed = 3;
+    let cameraX = 0; // Camera's x position
 
     function resetGame() {
       player = {
@@ -52,25 +56,43 @@
         velocityY: 0,
         isJumping: false,
         speed: 5,
+        animationFrame: 0,
+        animationSpeed: 5,
+        direction: 1
       };
 
       platforms = [
         { x: 0, y: canvas.height - 20, width: canvas.width, height: 20 },
         { x: 200, y: canvas.height - 100, width: 100, height: 20 },
         { x: 500, y: canvas.height - 150, width: 150, height: 20 },
-        {x: 800, y: canvas.height - 75, width: 80, height: 20}
+        { x: 800, y: canvas.height - 75, width: 80, height: 20 }
       ];
+      cameraX = 0;
     }
 
     function drawPlayer() {
       ctx.fillStyle = "red";
-      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // Simple animation: change width slightly
+      let animatedWidth = player.width;
+      if (keys["ArrowRight"] || keys["ArrowLeft"]) {
+        player.animationFrame++;
+        if (player.animationFrame % player.animationSpeed < player.animationSpeed / 2) {
+          animatedWidth = player.width * 1.1; // Slightly wider
+        } else {
+          animatedWidth = player.width;
+        }
+      } else {
+        player.animationFrame = 0;
+      }
+
+      ctx.fillRect(player.x - cameraX, player.y, animatedWidth, player.height);
     }
 
     function drawPlatforms() {
       ctx.fillStyle = "black";
       platforms.forEach((platform) => {
-        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+        ctx.fillRect(platform.x - cameraX, platform.y, platform.width, platform.height);
       });
     }
 
@@ -80,9 +102,11 @@
 
       if (keys["ArrowRight"]) {
         player.x += player.speed;
+        player.direction = 1;
       }
       if (keys["ArrowLeft"]) {
         player.x -= player.speed;
+        player.direction = -1;
       }
 
       let grounded = false;
@@ -109,13 +133,17 @@
         player.isJumping = true;
       }
 
+      // Camera follow
+      cameraX = player.x - canvas.width / 2;
+      if (cameraX < 0) cameraX = 0;
+
       platforms.forEach((platform) => {
         platform.x -= scrollSpeed;
       });
 
-      platforms = platforms.filter((platform) => platform.x + platform.width > 0);
+      platforms = platforms.filter((platform) => platform.x + platform.width > cameraX);
 
-      if (platforms[platforms.length - 1].x + platforms[platforms.length - 1].width < canvas.width) {
+      if (platforms[platforms.length - 1].x + platforms[platforms.length - 1].width < cameraX + canvas.width) {
         const lastPlatform = platforms[platforms.length - 1];
         const newPlatformWidth = Math.floor(Math.random() * 150) + 50;
         const newPlatformHeight = 20;
@@ -125,8 +153,8 @@
         platforms.push({ x: newPlatformX, y: newPlatformY, width: newPlatformWidth, height: newPlatformHeight });
       }
 
-      if(player.x < 0){player.x = 0;}
-      if(player.x+player.width > canvas.width){player.x = canvas.width - player.width;}
+      if (player.x < 0) { player.x = 0; }
+      if (player.x + player.width > cameraX + canvas.width) { player.x = cameraX + canvas.width - player.width; }
     }
 
     function render() {
@@ -149,8 +177,8 @@
         player.velocityY = jumpStrength;
         player.isJumping = true;
       }
-      if(event.key === 'r'){
-          resetGame();
+      if (event.key === 'r') {
+        resetGame();
       }
     });
 
@@ -158,11 +186,11 @@
       keys[event.key] = false;
     });
 
-    window.addEventListener('resize', function(){
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        platforms[0].width = canvas.width;
-        platforms[0].y = canvas.height-20;
+    window.addEventListener('resize', function () {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      platforms[0].width = canvas.width;
+      platforms[0].y = canvas.height - 20;
     });
   </script>
 </body>
