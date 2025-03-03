@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Pong Game</title>
+<style>
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #000;
+}
+canvas {
+    border: 2px solid #fff;
+}
+</style>
+</head>
+<body>
+
+<canvas id="pongCanvas" width="400" height="300"></canvas>
+
+<script>
+    const canvas = document.getElementById('pongCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const paddleWidth = 10;
+    const paddleHeight = 60;
+    const ballRadius = 10;
+
+    let player1 = {
+        x: 10,
+        y: canvas.height / 2 - paddleHeight / 2,
+        dy: 0,
+        score: 0
+    };
+
+    let player2 = {
+        x: canvas.width - 20,
+        y: canvas.height / 2 - paddleHeight / 2,
+        dy: 0,
+        score: 0,
+        isBot: true // Set to false to play with a friend.
+    };
+
+    let ball = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        dx: 3,
+        dy: 3
+    };
+
+    function drawPaddle(player) {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(player.x, player.y, paddleWidth, paddleHeight);
+    }
+
+    function drawBall() {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    function drawScore() {
+        ctx.font = '20px Arial';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(player1.score, canvas.width / 4, 30);
+        ctx.fillText(player2.score, 3 * canvas.width / 4, 30);
+    }
+
+    function update() {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw paddles and ball
+        drawPaddle(player1);
+        drawPaddle(player2);
+        drawBall();
+        drawScore();
+
+        // Move paddles
+        player1.y += player1.dy;
+        if (player2.isBot) {
+            // Bot AI
+            if(ball.y < player2.y + paddleHeight/2){
+              player2.y -= 3;
+            }else if (ball.y > player2.y + paddleHeight/2){
+              player2.y += 3;
+            }
+        } else {
+            player2.y += player2.dy;
+        }
+
+        // Paddle boundaries
+        if (player1.y < 0) player1.y = 0;
+        if (player1.y + paddleHeight > canvas.height) player1.y = canvas.height - paddleHeight;
+        if (player2.y < 0) player2.y = 0;
+        if (player2.y + paddleHeight > canvas.height) player2.y = canvas.height - paddleHeight;
+
+        // Move ball
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Ball boundaries
+        if (ball.y < ballRadius || ball.y > canvas.height - ballRadius) {
+            ball.dy = -ball.dy;
+        }
+
+        // Paddle collision
+        if (ball.x - ballRadius < player1.x + paddleWidth &&
+            ball.y > player1.y && ball.y < player1.y + paddleHeight) {
+            ball.dx = -ball.dx;
+            ball.dx *= 1.05; // Increase speed
+            ball.dy *= 1.05;
+        }
+
+        if (ball.x + ballRadius > player2.x &&
+            ball.y > player2.y && ball.y < player2.y + paddleHeight) {
+            ball.dx = -ball.dx;
+            ball.dx *= 1.05;
+            ball.dy *= 1.05;
+        }
+
+        // Score
+        if (ball.x < 0) {
+            player2.score++;
+            resetBall();
+        }
+
+        if (ball.x > canvas.width) {
+            player1.score++;
+            resetBall();
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    function resetBall() {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+        ball.dx = Math.random() > 0.5 ? 3 : -3;
+        ball.dy = Math.random() > 0.5 ? 3 : -3;
+    }
+
+    // Event listeners
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'w') player1.dy = -5;
+        if (e.key === 's') player1.dy = 5;
+        if (!player2.isBot) {
+            if (e.key === 'ArrowUp') player2.dy = -5;
+            if (e.key === 'ArrowDown') player2.dy = 5;
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'w' || e.key === 's') player1.dy = 0;
+        if (!player2.isBot) {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') player2.dy = 0;
+        }
+    });
+
+    update();
+</script>
+
+</body>
+</html>
