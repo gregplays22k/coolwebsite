@@ -1,21 +1,156 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Platformer Game</title>
+    <title>Advanced Platformer</title>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: #e0e0e0;
-        }
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
     </style>
 </head>
 <body>
-    <script src="platformer.js"></script>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let player = {
+            x: 100, y: 100, width: 30, height: 40, velocityX: 0, velocityY: 0, jumping: false,
+            frame: 0, animationSpeed: 10, // Animation variables
+        };
+        let camera = { x: 0, y: 0 };
+        let world = { tiles: [] };
+        let enemies = [];
+        const gravity = 0.5;
+        const jumpStrength = -12;
+        const moveSpeed = 5;
+
+        function generateWorld() {
+            let x = 0;
+            while (x < 2000) {
+                let y = canvas.height - 50 - Math.random() * 100; // Random height
+                let width = 50 + Math.random() * 100; // Random width
+                world.tiles.push({ x: x, y: y, width: width, height: 50 });
+                x += width + 50 + Math.random() * 100; // Random gap
+            }
+        }
+
+        function drawWorld() {
+            world.tiles.forEach(tile => {
+                ctx.fillStyle = 'gray';
+                ctx.fillRect(tile.x - camera.x, tile.y - camera.y, tile.width, tile.height);
+            });
+        }
+
+        function drawPlayer() {
+            let frameX = (player.frame * player.width) % (player.width * 2); // Simple 2-frame animation
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(player.x - camera.x, player.y - camera.y, player.width, player.height);
+        }
+
+        function drawEnemies() {
+            enemies.forEach(enemy => {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(enemy.x - camera.x, enemy.y - camera.y, 20, 30);
+            });
+        }
+
+        function updatePlayer() {
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+            player.velocityY += gravity;
+
+            // Collision Detection
+            world.tiles.forEach(tile => {
+                if (player.x < tile.x + tile.width && player.x + player.width > tile.x &&
+                    player.y < tile.y + tile.height && player.y + player.height > tile.y) {
+                    // Collision response
+                    let dx = (player.x + player.width / 2) - (tile.x + tile.width / 2);
+                    let dy = (player.y + player.height / 2) - (tile.y + tile.height / 2);
+                    let width = (player.width + tile.width) / 2;
+                    let height = (player.height + tile.height) / 2;
+
+                    if (Math.abs(dx) <= width && Math.abs(dy) <= height) {
+                        let crossWidth = width * Math.abs(dy);
+                        let crossHeight = height * Math.abs(dx);
+
+                        if (crossWidth > crossHeight) {
+                            if (dy > 0) {
+                                player.y = tile.y + tile.height;
+                                player.velocityY = 0;
+                            } else {
+                                player.y = tile.y - player.height;
+                                player.velocityY = 0;
+                                player.jumping = false;
+                            }
+                        } else {
+                            if (dx > 0) {
+                                player.x = tile.x + tile.width;
+                            } else {
+                                player.x = tile.x - player.width;
+                            }
+                        }
+                    }
+                }
+            });
+
+            camera.x = player.x - canvas.width / 2;
+            player.frame = (player.frame + 1) % player.animationSpeed;
+        }
+
+        function updateEnemies() {
+            enemies.forEach(enemy => {
+                enemy.x -= 2;
+                world.tiles.forEach(tile => {
+                    if (enemy.x < tile.x + tile.width && enemy.x + 20 > tile.x &&
+                        enemy.y < tile.y + tile.height && enemy.y + 30 > tile.y) {
+                        enemy.y = tile.y - 30;
+                    }
+                });
+                if (enemy.x < camera.x - 50){
+                    enemies.shift();
+                }
+            });
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updatePlayer();
+            updateEnemies();
+            drawWorld();
+            drawPlayer();
+            drawEnemies();
+            requestAnimationFrame(gameLoop);
+        }
+
+        generateWorld();
+        gameLoop();
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') {
+                player.velocityX = -moveSpeed;
+            } else if (event.key === 'ArrowRight') {
+                player.velocityX = moveSpeed;
+            } else if (event.key === 'ArrowUp' && !player.jumping) {
+                player.velocityY = jumpStrength;
+                player.jumping = true;
+            } else if (event.key === 'r') {
+                player = { x: 100, y: 100, width: 30, height: 40, velocityX: 0, velocityY: 0, jumping: false, frame: 0, animationSpeed: 10 };
+                camera = { x: 0, y: 0 };
+                enemies = [];
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                player.velocityX = 0;
+            }
+        });
+
+        setInterval(() => {
+            enemies.push({ x: player.x + canvas.width, y: canvas.height - 70 });
+        }, 3000);
+    </script>
 </body>
 </html>
