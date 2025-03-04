@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Advanced Platformer</title>
+    <title>Infinite Platformer</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -17,22 +17,28 @@
 
         let player = {
             x: 100, y: 100, width: 30, height: 40, velocityX: 0, velocityY: 0, jumping: false,
-            frame: 0, animationSpeed: 10, // Animation variables
+            frame: 0, animationSpeed: 10,
         };
         let camera = { x: 0, y: 0 };
         let world = { tiles: [] };
         let enemies = [];
+        let killEffects = []; // Array to store kill effects
         const gravity = 0.5;
         const jumpStrength = -12;
         const moveSpeed = 5;
+        const worldTileWidth = 100; // Fixed tile width for easier generation
 
         function generateWorld() {
-            let x = 0;
-            while (x < 2000) {
-                let y = canvas.height - 50 - Math.random() * 100; // Random height
-                let width = 50 + Math.random() * 100; // Random width
-                world.tiles.push({ x: x, y: y, width: width, height: 50 });
-                x += width + 50 + Math.random() * 100; // Random gap
+            let startX = Math.floor(camera.x / worldTileWidth) * worldTileWidth;
+            let endX = startX + canvas.width * 2;
+
+            world.tiles = world.tiles.filter(tile => tile.x + tile.width > camera.x - canvas.width); //Remove off screen tiles.
+
+            for (let x = startX; x < endX; x += worldTileWidth) {
+                if (!world.tiles.some(tile => tile.x === x)) {
+                    let y = canvas.height - 50 - Math.random() * 100;
+                    world.tiles.push({ x: x, y: y, width: worldTileWidth, height: 50 });
+                }
             }
         }
 
@@ -44,7 +50,7 @@
         }
 
         function drawPlayer() {
-            let frameX = (player.frame * player.width) % (player.width * 2); // Simple 2-frame animation
+            let frameX = (player.frame * player.width) % (player.width * 2);
             ctx.fillStyle = 'blue';
             ctx.fillRect(player.x - camera.x, player.y - camera.y, player.width, player.height);
         }
@@ -56,16 +62,22 @@
             });
         }
 
+        function drawKillEffects() {
+            killEffects.forEach(effect => {
+                ctx.fillStyle = 'yellow';
+                ctx.fillRect(effect.x - camera.x, effect.y - camera.y, 10, 10);
+            });
+        }
+
         function updatePlayer() {
             player.x += player.velocityX;
             player.y += player.velocityY;
             player.velocityY += gravity;
 
-            // Collision Detection
             world.tiles.forEach(tile => {
+                // Collision detection and response
                 if (player.x < tile.x + tile.width && player.x + player.width > tile.x &&
                     player.y < tile.y + tile.height && player.y + player.height > tile.y) {
-                    // Collision response
                     let dx = (player.x + player.width / 2) - (tile.x + tile.width / 2);
                     let dy = (player.y + player.height / 2) - (tile.y + tile.height / 2);
                     let width = (player.width + tile.width) / 2;
@@ -97,20 +109,34 @@
 
             camera.x = player.x - canvas.width / 2;
             player.frame = (player.frame + 1) % player.animationSpeed;
+            generateWorld();
         }
 
         function updateEnemies() {
-            enemies.forEach(enemy => {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let enemy = enemies[i];
                 enemy.x -= 2;
-                world.tiles.forEach(tile => {
-                    if (enemy.x < tile.x + tile.width && enemy.x + 20 > tile.x &&
-                        enemy.y < tile.y + tile.height && enemy.y + 30 > tile.y) {
-                        enemy.y = tile.y - 30;
-                    }
-                });
-                if (enemy.x < camera.x - 50){
-                    enemies.shift();
+
+                if (enemy.x < camera.x - 50) {
+                    enemies.splice(i, 1);
+                    continue;
                 }
+
+                if (player.x < enemy.x + 20 && player.x + player.width > enemy.x &&
+                    player.y < enemy.y + 30 && player.y + player.height > enemy.y) {
+                    if (player.y + player.height < enemy.y + 10) {
+                        enemies.splice(i, 1);
+                        killEffects.push({ x: enemy.x, y: enemy.y });
+                        player.velocityY = -5; // Bounce player up
+                    }
+                }
+            }
+        }
+
+        function updateKillEffects() {
+            killEffects = killEffects.filter(effect => {
+                effect.timer = (effect.timer || 10) - 1;
+                return effect.timer > 0;
             });
         }
 
@@ -118,9 +144,11 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             updatePlayer();
             updateEnemies();
+            updateKillEffects();
             drawWorld();
             drawPlayer();
             drawEnemies();
+            drawKillEffects();
             requestAnimationFrame(gameLoop);
         }
 
@@ -139,6 +167,8 @@
                 player = { x: 100, y: 100, width: 30, height: 40, velocityX: 0, velocityY: 0, jumping: false, frame: 0, animationSpeed: 10 };
                 camera = { x: 0, y: 0 };
                 enemies = [];
+                world = { tiles: [] };
+                generateWorld();
             }
         });
 
