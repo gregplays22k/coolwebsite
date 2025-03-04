@@ -1,14 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Infinite Platformer</title>
+    <title>Platformer</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            padding: 5px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+    <audio id="bgMusic" loop>
+        <source src="background_music.mp3" type="audio/mpeg">
+    </audio>
+    <footer>
+        Music by: www.purple-planet.com
+    </footer>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -19,7 +36,7 @@
             x: 100, y: 100, width: 30, height: 40, velocityX: 0, velocityY: 0, jumping: false,
             frame: 0, animationSpeed: 10, alive: true
         };
-        let camera = { x: 0, y: 0 };
+        let camera = { x: 0, y: 0, targetX: 0 };
         let world = { tiles: [] };
         let enemies = [];
         let killEffects = [];
@@ -27,6 +44,10 @@
         const jumpStrength = -12;
         const moveSpeed = 5;
         const worldTileWidth = 100;
+
+        const bgMusic = document.getElementById('bgMusic');
+        bgMusic.volume = 0.5;
+        bgMusic.play();
 
         function generateWorld() {
             let startX = Math.floor(camera.x / worldTileWidth) * worldTileWidth;
@@ -36,11 +57,11 @@
 
             for (let x = startX; x < endX; x += worldTileWidth) {
                 if (!world.tiles.some(tile => tile.x === x)) {
-                    let y = canvas.height - 50 - Math.random() * 150; // Increased height variation
+                    let y = canvas.height - 50 - Math.random() * 100;
                     let width = worldTileWidth;
-                    let hasSpikes = Math.random() < 0.2; // 20% chance of spikes
+                    let hasSpikes = Math.random() < 0.2;
                     world.tiles.push({ x: x, y: y, width: width, height: 50, spikes: hasSpikes });
-                    x += worldTileWidth + 100 + Math.random() * 200; // Increased gap
+                    x += worldTileWidth + 50 + Math.random() * 100;
                 }
             }
         }
@@ -126,32 +147,57 @@
                 }
             });
 
-            camera.x = player.x - canvas.width / 2;
+            camera.targetX = player.x - canvas.width / 2;
+            camera.x += (camera.targetX - camera.x) * 0.1;
             player.frame = (player.frame + 1) % player.animationSpeed;
             generateWorld();
         }
 
-        // ... (rest of the code remains the same)
+        function updateEnemies() {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let enemy = enemies[i];
+                enemy.x -= 2;
+
+                if (enemy.x < camera.x - 50) {
+                    enemies.splice(i, 1);
+                    continue;
+                }
+
+                if (player.x < enemy.x + 20 && player.x + player.width > enemy.x &&
+                    player.y < enemy.y + 30 && player.y + player.height > enemy.y) {
+                    if (player.y + player.height < enemy.y + 10) {
+                        enemies.splice(i, 1);
+                        killEffects.push({ x: enemy.x, y: enemy.y });
+                        player.velocityY = -5;
+                    }
+                }
+            }
+        }
+
+        function updateKillEffects() {
+            killEffects = killEffects.filter(effect => {
+                effect.timer = (effect.timer || 10) - 1;
+                return effect.timer > 0;
+            });
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updatePlayer();
+            updateEnemies();
+            updateKillEffects();
+            drawWorld();
+            drawPlayer();
+            drawEnemies();
+            drawKillEffects();
+            requestAnimationFrame(gameLoop);
+        }
+
+        generateWorld();
+        gameLoop();
 
         document.addEventListener('keydown', (event) => {
             if (player.alive) {
                 if (event.key === 'ArrowLeft') {
                     player.velocityX = -moveSpeed;
                 } else if (event.key === 'ArrowRight') {
-                    player.velocityX = moveSpeed;
-                } else if (event.key === 'ArrowUp' && !player.jumping) {
-                    player.velocityY = jumpStrength;
-                    player.jumping = true;
-                }
-            }
-            if (event.key === 'r') {
-                player = { x: 100, y: 100, width: 30, height: 40, velocityX: 0, velocityY: 0, jumping: false, frame: 0, animationSpeed: 10, alive: true };
-                camera = { x: 0, y: 0 };
-                enemies = [];
-                world = { tiles: [] };
-                generateWorld();
-            }
-        });
-    </script>
-</body>
-</html>
